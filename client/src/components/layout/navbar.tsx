@@ -10,52 +10,44 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <nav className="glass-navbar sticky top-0 z-50 px-4 py-4 md:px-8">
+    <nav className="glass-navbar sticky top-0 z-50 px-4 py-3 md:px-8">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/">
-            <a className="flex items-center">
-              <svg
-                className="w-8 h-8 text-primary"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M9 14.25l6-6m4.5-3.493V8.25a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 8.25v-1.5A2.25 2.25 0 013.75 4.5h4.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-4.5A2.25 2.25 0 011.5 17.25v-1.5A2.25 2.25 0 013.75 13.5h13.5a2.25 2.25 0 012.25 2.25v1.5a2.25 2.25 0 01-2.25 2.25h-4.5a2.25 2.25 0 01-2.25-2.25V9"></path>
-              </svg>
-              <span className="ml-2 text-2xl font-medium font-outfit text-primary">
-                Middlesman
+            <div className="flex items-center cursor-pointer">
+              <span className="text-2xl font-bold text-white">
+                middlesman
               </span>
-            </a>
+            </div>
           </Link>
         </div>
 
         {!isMobile && (
           <div className="hidden md:flex space-x-8 items-center">
             <Link href="/">
-              <a className="font-medium text-primary hover:text-secondary transition-colors">
+              <span className="font-medium text-white/80 hover:text-white transition-colors cursor-pointer">
                 Home
-              </a>
+              </span>
             </Link>
             {user ? (
               <>
                 <Link href="/dashboard">
-                  <a className="font-medium text-darkBg hover:text-primary transition-colors">
+                  <span className="font-medium text-white/80 hover:text-white transition-colors cursor-pointer">
                     Dashboard
-                  </a>
+                  </span>
                 </Link>
                 <Link href="/transactions">
-                  <a className="font-medium text-darkBg hover:text-primary transition-colors">
+                  <span className="font-medium text-white/80 hover:text-white transition-colors cursor-pointer">
                     Transactions
-                  </a>
+                  </span>
                 </Link>
                 <div className="relative">
                   <button 
-                    className="flex items-center font-medium gap-2"
+                    className="flex items-center font-medium gap-2 text-white"
                     onClick={() => logout()}
                   >
                     <span>{user.username}</span>
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/20 text-primary">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/20 text-white">
                       {user.username.charAt(0).toUpperCase()}
                     </div>
                   </button>
@@ -64,14 +56,14 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <a className="font-medium text-darkBg hover:text-primary transition-colors">
+                  <span className="font-medium text-white/80 hover:text-white transition-colors cursor-pointer">
                     Login
-                  </a>
+                  </span>
                 </Link>
                 <Link href="/register">
-                  <a>
-                    <GlassButton>Register</GlassButton>
-                  </a>
+                  <div className="cursor-pointer">
+                    <GlassButton>Login with Mobile</GlassButton>
+                  </div>
                 </Link>
               </>
             )}
@@ -79,7 +71,7 @@ export default function Navbar() {
         )}
 
         <button
-          className="md:hidden"
+          className="md:hidden text-white"
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
         >
           <svg
@@ -101,19 +93,11 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isMobile && mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 bg-darkBg">
+        <div className="fixed inset-0 z-50 bg-deepBlack">
           <div className="p-4 flex justify-between items-center">
             <div className="flex items-center">
-              <svg
-                className="w-8 h-8 text-white"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path d="M9 14.25l6-6m4.5-3.493V8.25a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 8.25v-1.5A2.25 2.25 0 013.75 4.5h4.5a2.25 2.25 0 012.25 2.25v10.5a2.25 2.25 0 01-2.25 2.25h-4.5A2.25 2.25 0 011.5 17.25v-1.5A2.25 2.25 0 013.75 13.5h13.5a2.25 2.25 0 012.25 2.25v1.5a2.25 2.25 0 01-2.25 2.25h-4.5a2.25 2.25 0 01-2.25-2.25V9"></path>
-              </svg>
-              <span className="ml-2 text-2xl font-medium font-outfit text-white">
-                Middlesman
+              <span className="text-2xl font-bold text-white">
+                middlesman
               </span>
             </div>
             <button
@@ -138,30 +122,30 @@ export default function Navbar() {
           </div>
           <div className="p-4 flex flex-col space-y-4">
             <Link href="/">
-              <a className="text-white text-lg py-2" onClick={() => setMobileMenuOpen(false)}>
+              <div className="text-white text-xl py-3 cursor-pointer" onClick={() => setMobileMenuOpen(false)}>
                 Home
-              </a>
+              </div>
             </Link>
             {user ? (
               <>
                 <Link href="/dashboard">
-                  <a 
-                    className="text-white text-opacity-80 text-lg py-2"
+                  <div 
+                    className="text-white/80 text-xl py-3 cursor-pointer"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Dashboard
-                  </a>
+                  </div>
                 </Link>
                 <Link href="/transactions">
-                  <a 
-                    className="text-white text-opacity-80 text-lg py-2"
+                  <div 
+                    className="text-white/80 text-xl py-3 cursor-pointer"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Transactions
-                  </a>
+                  </div>
                 </Link>
                 <button 
-                  className="text-white text-opacity-80 text-lg py-2 text-left"
+                  className="text-white/80 text-xl py-3 text-left"
                   onClick={() => {
                     logout();
                     setMobileMenuOpen(false);
@@ -169,9 +153,9 @@ export default function Navbar() {
                 >
                   Logout
                 </button>
-                <div className="pt-4 border-t border-white border-opacity-20">
+                <div className="pt-4 border-t border-white/10">
                   <div className="flex items-center py-2">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 text-white mr-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-primary/20 text-white mr-2">
                       {user.username.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-white">{user.username}</span>
@@ -181,20 +165,20 @@ export default function Navbar() {
             ) : (
               <>
                 <Link href="/login">
-                  <a 
-                    className="text-white text-opacity-80 text-lg py-2"
+                  <div 
+                    className="text-white/80 text-xl py-3 cursor-pointer"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Login
-                  </a>
+                  </div>
                 </Link>
                 <Link href="/register">
-                  <a 
-                    className="text-white text-opacity-80 text-lg py-2"
+                  <div 
+                    className="text-white/80 text-xl py-3 cursor-pointer"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Register
-                  </a>
+                  </div>
                 </Link>
               </>
             )}

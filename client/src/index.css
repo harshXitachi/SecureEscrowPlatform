@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,34 +6,35 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 224 83% 58%; /* #4361EE */
-    --primary-foreground: 210 40% 98%;
-    --secondary: 261 88% 36%; /* #3A0CA3 */
-    --secondary-foreground: 210 40% 98%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 333 84% 56%; /* #F72585 */
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 224 83% 58%;
-    --radius: 1rem;
-    --success: 195 96% 59%; /* #4CC9F0 */
-    --success-foreground: 210 40% 98%;
-    --info: 281 87% 38%; /* #7209B7 */
-    --info-foreground: 210 40% 98%;
-    --warning: 333 84% 56%; /* #F72585 */
-    --warning-foreground: 210 40% 98%;
-    --darkBg: 217, 33%, 17%, 0.85; /* rgba(29, 38, 58, 0.85) */
-    --lightBg: 220, 30%, 96%, 0.85; /* rgba(245, 247, 250, 0.85) */
+    /* PLINK-inspired color scheme */
+    --background: 210 100% 20%; /* deep blue */
+    --foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 210 100% 50%; /* bright blue */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 10%; /* almost black */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 40% 30%;
+    --muted-foreground: 210 40% 80%;
+    --accent: 35 100% 50%; /* gold accent */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 210 40% 30%;
+    --input: 210 40% 30%;
+    --ring: 210 100% 50%;
+    --radius: 0.5rem;
+    --success: 160 100% 40%;
+    --success-foreground: 0 0% 100%;
+    --info: 200 100% 40%;
+    --info-foreground: 0 0% 100%;
+    --warning: 35 100% 50%;
+    --warning-foreground: 0 0% 0%;
+    --darkBlue: 210, 100%, 20%; /* rgba(0, 34, 68, 1) */
+    --deepBlack: 0, 0%, 10%; /* rgba(26, 26, 26, 1) */
   }
 
   * {
@@ -41,7 +42,7 @@
   }
 
   body {
-    @apply antialiased bg-gradient-to-br from-lightBg to-[rgba(235,240,250,0.9)] text-darkBg font-inter relative overflow-x-hidden;
+    @apply antialiased bg-[#0A1929] text-white font-inter relative overflow-x-hidden;
   }
 
   body::before {
@@ -52,27 +53,53 @@
     width: 100%;
     height: 100%;
     background-image: 
-      radial-gradient(circle at 90% 10%, rgba(76, 201, 240, 0.1) 0%, rgba(67, 97, 238, 0.05) 30%, transparent 70%),
-      radial-gradient(circle at 10% 90%, rgba(58, 12, 163, 0.1) 0%, rgba(247, 37, 133, 0.05) 30%, transparent 70%);
+      radial-gradient(circle at 90% 10%, rgba(0, 102, 204, 0.2) 0%, rgba(0, 34, 68, 0.1) 30%, transparent 70%),
+      radial-gradient(circle at 10% 90%, rgba(0, 68, 136, 0.2) 0%, rgba(0, 34, 68, 0.1) 30%, transparent 70%);
     z-index: -1;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-outfit;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    @apply font-bold tracking-tight;
+  }
+
+  h1 {
+    @apply text-5xl md:text-7xl;
+  }
+
+  h2 {
+    @apply text-4xl md:text-6xl;
+  }
+
+  h3 {
+    @apply text-3xl md:text-5xl;
+  }
+
+  .plink-gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-200;
   }
 }
 
 @layer utilities {
+  /* Plink-inspired UI components */
   .glass-card {
-    @apply bg-white/60 backdrop-blur-md border border-white/20 rounded-2xl shadow-lg transition-all duration-300;
+    @apply bg-deepBlack/80 backdrop-blur-lg border border-white/10 rounded-lg shadow-lg transition-all duration-300;
+  }
+
+  .plink-card {
+    @apply bg-deepBlack/80 backdrop-blur-lg rounded-lg shadow-xl transition-all duration-300;
+  }
+
+  .blue-card {
+    @apply bg-darkBlue backdrop-blur-lg rounded-lg shadow-xl transition-all duration-300;
   }
 
   .glass-button {
-    @apply bg-primary/80 backdrop-blur text-white rounded-lg border border-white/20 shadow-md transition-all duration-300;
+    @apply bg-primary text-white rounded-full px-6 py-3 font-bold shadow-md transition-all duration-300;
   }
 
   .glass-button:hover {
-    @apply transform scale-[1.02] bg-primary/90;
+    @apply transform scale-[1.02] brightness-110;
   }
 
   .glass-button:active {
@@ -80,15 +107,15 @@
   }
 
   .glass-input {
-    @apply bg-white/40 backdrop-blur border border-white/20 rounded-lg transition-all duration-300;
+    @apply bg-deepBlack/80 text-white backdrop-blur border border-white/10 rounded-md transition-all duration-300;
   }
 
   .glass-input:focus {
-    @apply bg-white/60 shadow-[0_0_0_3px_rgba(67,97,238,0.3)] border-primary/50 outline-none;
+    @apply bg-deepBlack/90 shadow-[0_0_0_3px_rgba(0,102,204,0.3)] border-primary/50 outline-none;
   }
 
   .glass-navbar {
-    @apply bg-white/70 backdrop-blur-md border-b border-white/20 shadow-md;
+    @apply bg-deepBlack/90 backdrop-blur-xl border-b border-white/5 shadow-md;
   }
 
   .status-badge {
@@ -129,6 +156,16 @@
   .stagger-4 { animation-delay: 0.4s; }
   .stagger-5 { animation-delay: 0.5s; }
 
+  /* Plink-inspired text animations */
+  .text-reveal {
+    animation: textReveal 1.5s cubic-bezier(0.77, 0, 0.175, 1) forwards;
+    clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
   @keyframes fadeIn {
     0% { opacity: 0; }
     100% { opacity: 1; }
@@ -142,6 +179,49 @@
   @keyframes scale {
     0% { transform: scale(0.95); }
     100% { transform: scale(1); }
+  }
+  
+  @keyframes textReveal {
+    0% {
+      clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+    }
+    100% {
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+  }
+
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+    100% {
+      transform: translateY(0px);
+    }
+  }
+  
+  /* Text split animation with letter-by-letter reveal */
+  .text-split-reveal span {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(20px);
+    animation-fill-mode: forwards;
+    animation-name: letterReveal;
+    animation-duration: 0.3s;
+    animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1);
+  }
+  
+  @keyframes letterReveal {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }
 
