@@ -194,7 +194,7 @@ export const AnimatedTransactionIcon = ({ className = "" }: { className?: string
         x: {
           repeat: Infinity,
           duration: 2,
-          repeatType: "loop",
+          repeatType: "loop" as const,
           ease: "easeInOut",
           times: [0, 0.5, 1]
         },
@@ -217,7 +217,7 @@ export const AnimatedTransactionIcon = ({ className = "" }: { className?: string
         x: {
           repeat: Infinity,
           duration: 2,
-          repeatType: "loop",
+          repeatType: "loop" as const,
           ease: "easeInOut",
           times: [0, 0.5, 1],
           delay: 0.5
