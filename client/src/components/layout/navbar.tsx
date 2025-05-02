@@ -2,15 +2,19 @@ import { useAuth } from "@/contexts/auth-context";
 import { GlassButton } from "@/components/ui/glass-button";
 import { Link } from "wouter";
 import { useMobile } from "@/hooks/use-mobile";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import AnimatedLogo from "@/components/ui/animated-logo";
 import { FloatingElement } from "@/components/ui/morphing-shapes";
+import { ChevronDown } from "lucide-react";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const isMobile = useMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [productMenuOpen, setProductMenuOpen] = useState(false);
+  const [companyMenuOpen, setCompanyMenuOpen] = useState(false);
+  const [legalMenuOpen, setLegalMenuOpen] = useState(false);
 
   const navItemVariants = {
     hidden: { opacity: 0, y: -10 },

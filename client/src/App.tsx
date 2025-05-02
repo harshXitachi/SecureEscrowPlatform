@@ -8,6 +8,7 @@ import Transactions from "@/pages/transactions";
 import CreateTransaction from "@/pages/create-transaction";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import ContentPage from "@/pages/content-page";
 import NotFound from "@/pages/not-found";
 import { AuthProvider, useAuth } from "./contexts/auth-context";
 
@@ -20,6 +21,20 @@ function ProtectedRoutes() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      
+      {/* Content Pages */}
+      <Route path="/product/features" component={() => <ContentPage category="product" subcategory="features" />} />
+      <Route path="/product/pricing" component={() => <ContentPage category="product" subcategory="pricing" />} />
+      <Route path="/product/integrations" component={() => <ContentPage category="product" subcategory="integrations" />} />
+      <Route path="/product/enterprise" component={() => <ContentPage category="product" subcategory="enterprise" />} />
+      <Route path="/product/security" component={() => <ContentPage category="product" subcategory="security" />} />
+      
+      <Route path="/company/about" component={() => <ContentPage category="company" subcategory="about" />} />
+      <Route path="/company/careers" component={() => <ContentPage category="company" subcategory="careers" />} />
+      <Route path="/company/partners" component={() => <ContentPage category="company" subcategory="partners" />} />
+      
+      <Route path="/legal/terms" component={() => <ContentPage category="company" subcategory="legal" slug="terms-of-service" />} />
+      <Route path="/legal/privacy" component={() => <ContentPage category="company" subcategory="legal" slug="privacy-policy" />} />
       
       {user ? (
         <>
