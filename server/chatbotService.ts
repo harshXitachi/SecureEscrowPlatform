@@ -176,14 +176,20 @@ export async function generateChatbotResponse(message: ChatMessage): Promise<str
     const userDisputes = await getUserDisputeInfo(message.userId);
     
     // Get user info
-    const user = await db.query.users.findFirst({
-      where: eq(users.id, message.userId),
-      columns: {
-        id: true,
-        username: true,
-        createdAt: true,
-      },
-    });
+    let user = null;
+    try {
+      user = await db.query.users.findFirst({
+        where: eq(users.id, message.userId),
+        columns: {
+          id: true,
+          username: true,
+          createdAt: true,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      // Continue without user info
+    }
     
     // Create prompt context
     const systemPrompt = systemPrompts[language] || systemPrompts.english;
@@ -218,8 +224,9 @@ export async function generateChatbotResponse(message: ChatMessage): Promise<str
     openaiMessages.push({ role: "user", content: message.content });
     
     // Generate response from OpenAI
+    // Using gpt-3.5-turbo instead of gpt-4 for wider availability
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-3.5-turbo",
       messages: openaiMessages as any,
       temperature: 0.7,
       max_tokens: 2000,
