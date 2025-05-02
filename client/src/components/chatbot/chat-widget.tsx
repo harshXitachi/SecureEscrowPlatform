@@ -254,7 +254,7 @@ export default function ChatWidget() {
                       className={cn(
                         "flex max-w-[85%] rounded-lg p-3 text-sm",
                         msg.isBot
-                          ? "bg-muted self-start rounded-tl-none text-foreground"
+                          ? "bg-slate-100 self-start rounded-tl-none text-slate-800" 
                           : "bg-primary text-primary-foreground self-end rounded-tr-none"
                       )}
                     >

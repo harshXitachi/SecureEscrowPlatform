@@ -39,76 +39,97 @@ function detectLanguage(text: string): "english" | "hindi" | "hinglish" {
 
 // Function to get transaction info for a user
 async function getUserTransactionInfo(userId: number) {
-  const userTransactions = await db.query.transactions.findMany({
-    where: (transactions, { or, eq }) => or(
-      eq(transactions.buyerId, userId),
-      eq(transactions.sellerId, userId)
-    ),
-    with: {
-      buyer: {
-        columns: {
-          id: true,
-          username: true,
+  try {
+    const userTransactions = await db.query.transactions.findMany({
+      where: (transactions, { or, eq }) => or(
+        eq(transactions.buyerId, userId),
+        eq(transactions.sellerId, userId)
+      ),
+      with: {
+        buyer: {
+          columns: {
+            id: true,
+            username: true,
+          },
         },
-      },
-      seller: {
-        columns: {
-          id: true,
-          username: true,
+        seller: {
+          columns: {
+            id: true,
+            username: true,
+          },
         },
+        milestones: true,
       },
-      milestones: true,
-    },
-    orderBy: [desc(transactions.createdAt)],
-    limit: 5,
-  });
-  
-  return userTransactions;
+      orderBy: [desc(transactions.createdAt)],
+      limit: 5,
+    });
+    
+    return userTransactions;
+  } catch (error) {
+    console.error("Error retrieving user transaction info:", error);
+    return []; // Return empty array on error
+  }
 }
 
 // Function to get user dispute information
 async function getUserDisputeInfo(userId: number) {
-  const userDisputes = await db.query.disputes.findMany({
-    where: (disputes, { or, eq }) => or(
-      eq(disputes.raisedById, userId),
-      eq(disputes.assignedToId, userId) // The schema has assignedToId not defendantId
-    ),
-    with: {
-      transaction: true,
-      raisedBy: {
-        columns: {
-          id: true,
-          username: true,
+  try {
+    const userDisputes = await db.query.disputes.findMany({
+      where: (disputes, { or, eq }) => or(
+        eq(disputes.raisedById, userId),
+        eq(disputes.assignedToId, userId) // The schema has assignedToId not defendantId
+      ),
+      with: {
+        transaction: true,
+        raisedBy: {
+          columns: {
+            id: true,
+            username: true,
+          },
         },
       },
-    },
-    orderBy: [desc(disputes.createdAt)],
-    limit: 3,
-  });
-  
-  return userDisputes;
+      orderBy: [desc(disputes.createdAt)],
+      limit: 3,
+    });
+    
+    return userDisputes;
+  } catch (error) {
+    console.error("Error retrieving user dispute info:", error);
+    return []; // Return empty array on error
+  }
 }
 
 // Get conversation history for a user
 async function getConversationHistory(userId: number, limit = 10) {
-  const conversationHistory = await db.query.messages.findMany({
-    where: eq(messages.senderId, userId),
-    orderBy: [desc(messages.createdAt)],
-    limit,
-  });
-  
-  return conversationHistory.reverse();
+  try {
+    const conversationHistory = await db.query.messages.findMany({
+      where: eq(messages.senderId, userId),
+      orderBy: [desc(messages.createdAt)],
+      limit,
+    });
+    
+    return conversationHistory.reverse();
+  } catch (error) {
+    console.error("Error retrieving conversation history:", error);
+    return []; // Return empty array on error
+  }
 }
 
 // Store a message in the database
 async function storeMessage(message: ChatMessage, isBot: boolean) {
-  const [newMessage] = await db.insert(messages).values({
-    content: message.content,
-    senderId: message.userId,
-    isRead: isBot ? false : true,
-  }).returning();
-  
-  return newMessage;
+  try {
+    const [newMessage] = await db.insert(messages).values({
+      content: message.content,
+      senderId: message.userId,
+      isRead: isBot ? false : true,
+    }).returning();
+    
+    return newMessage;
+  } catch (error) {
+    console.error("Error storing message:", error);
+    // Return a minimal object that matches the expected shape
+    return { id: -1, content: message.content };
+  }
 }
 
 // System prompts for different languages
