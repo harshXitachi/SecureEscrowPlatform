@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, X, Minimize2, Maximize2, Info, CornerDownLeft } from "lucide-react";
-import { useAuth } from "../../contexts/auth-context";
+import { useAuth } from "@/contexts/auth-context";
 import { 
   sendMessage, 
   getChatHistory, 
@@ -9,12 +9,13 @@ import {
   initChatbotWebSocket, 
   type ChatMessage, 
   type FAQ 
-} from "../../lib/chatbotService";
-import { cn } from "../../lib/utils";
-import { Button } from "../ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "../ui/tabs";
-import { useMobile } from "../../hooks/use-mobile";
-import { useToast } from "../../hooks/use-toast";
+} from "@/lib/chatbotService";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tooltip } from "@/components/ui/tooltip";
+import { useMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 
 const languageOptions = [
   { value: "english", label: "English" },

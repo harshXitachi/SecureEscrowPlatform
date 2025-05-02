@@ -1,6 +1,7 @@
 import { Switch, Route } from "wouter";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/footer";
+import ChatWidget from "@/components/chatbot/chat-widget";
 import Home from "@/pages/home";
 import Dashboard from "@/pages/dashboard";
 import Transactions from "@/pages/transactions";
@@ -36,6 +37,8 @@ function ProtectedRoutes() {
 
 // The authenticated part of the app that uses the auth context
 function AuthenticatedApp() {
+  const { user } = useAuth();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -43,6 +46,7 @@ function AuthenticatedApp() {
         <ProtectedRoutes />
       </main>
       <Footer />
+      {user && <ChatWidget />}
     </div>
   );
 }
