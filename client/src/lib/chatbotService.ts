@@ -13,9 +13,12 @@ export interface FAQ {
   answer: string;
 }
 
-export const sendMessage = async (content: string, language?: "english" | "hindi" | "hinglish"): Promise<string> => {
+export const sendMessage = async (content: string, language?: "english" | "hindi" | "hinglish", isAuthenticated: boolean = true): Promise<string> => {
   try {
-    const response = await apiRequest("POST", "/api/chatbot/message", {
+    // Use different endpoints based on authentication status
+    const endpoint = isAuthenticated ? "/api/chatbot/message" : "/api/chatbot/public-message";
+    
+    const response = await apiRequest("POST", endpoint, {
       content,
       language,
     });

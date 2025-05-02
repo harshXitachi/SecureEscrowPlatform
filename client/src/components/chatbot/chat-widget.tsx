@@ -92,11 +92,11 @@ export default function ChatWidget() {
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading || !user) return;
+    if (!inputValue.trim() || isLoading) return;
     
     const userMessage: ChatMessage = {
       content: inputValue,
-      userId: user.id,
+      userId: user?.id || -1,
       isBot: false,
       timestamp: new Date(),
     };
@@ -106,11 +106,12 @@ export default function ChatWidget() {
     setIsLoading(true);
     
     try {
-      // Use WebSocket if available, fallback to HTTP API
-      if (websocketRef.current) {
+      // For authenticated users: Use WebSocket if available, fallback to HTTP API
+      // For non-authenticated users: Always use the public HTTP API
+      if (user && websocketRef.current) {
         websocketRef.current.sendMessage(inputValue);
       } else {
-        const response = await sendMessage(inputValue, language);
+        const response = await sendMessage(inputValue, language, !!user);
         
         const botMessage: ChatMessage = {
           content: response,
@@ -298,44 +299,36 @@ export default function ChatWidget() {
 
               {/* Input */}
               <div className="p-3 border-t flex gap-2">
-                {user ? (
-                  <>
-                    <div className="relative flex-1">
-                      <textarea
-                        value={inputValue}
-                        onChange={(e) => setInputValue(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSendMessage();
-                          }
-                        }}
-                        placeholder="Type your message..."
-                        className="w-full p-2 pr-8 border rounded-md resize-none h-10 min-h-10 max-h-32 text-foreground"
-                        rows={1}
-                      />
-                      <div className="absolute right-2 bottom-2 text-muted-foreground">
-                        <CornerDownLeft className="h-4 w-4" />
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={handleSendMessage} 
-                      disabled={isLoading || !inputValue.trim()} 
-                      size="icon"
-                    >
-                      <Send className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <div className="w-full text-center p-2 bg-muted rounded-md">
-                    <p className="text-sm mb-1">Please log in to chat with our AI assistant</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => window.location.href = '/login'}
-                    >
-                      Login
-                    </Button>
+                <div className="relative flex-1">
+                  <textarea
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder={user ? "Type your message..." : "Ask a basic question (limited functionality)"}
+                    className="w-full p-2 pr-8 border rounded-md resize-none h-10 min-h-10 max-h-32 text-foreground"
+                    rows={1}
+                  />
+                  <div className="absolute right-2 bottom-2 text-muted-foreground">
+                    <CornerDownLeft className="h-4 w-4" />
+                  </div>
+                </div>
+                <Button 
+                  onClick={handleSendMessage} 
+                  disabled={isLoading || !inputValue.trim()} 
+                  size="icon"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+                
+                {/* Login prompt for non-authenticated users */}
+                {!user && (
+                  <div className="absolute -top-8 right-0 left-0 bg-primary text-primary-foreground py-1 px-3 text-xs text-center rounded-t-md">
+                    <a href="/login" className="underline font-medium">Log in</a> for full chat history & personalized assistance
                   </div>
                 )}
               </div>

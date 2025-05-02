@@ -35,7 +35,7 @@ export function registerChatbotApiRoutes(app: Express) {
     next();
   };
   
-  // Route to send a message to the chatbot
+  // Route to send a message to the chatbot for logged in users
   app.post(`${apiPrefix}/chatbot/message`, requireAuth, validateMessage, async (req, res) => {
     try {
       const userId = req.session.userId;
@@ -91,6 +91,29 @@ export function registerChatbotApiRoutes(app: Express) {
     } catch (error) {
       console.error("Error fetching chat history:", error);
       return res.status(500).json({ message: "Failed to fetch chat history" });
+    }
+  });
+  
+  // Public endpoint for non-authenticated users to get basic chatbot responses
+  app.post(`${apiPrefix}/chatbot/public-message`, validateMessage, async (req, res) => {
+    try {
+      const { content, language } = req.body;
+      
+      // Create message object for the AI service with a guest user ID
+      const message: ChatMessage = {
+        content,
+        userId: -1, // Using -1 for guest users
+        language,
+      };
+      
+      // Generate response - but no storage for public messages
+      // This limits server storage usage while still providing value
+      const response = await generateChatbotResponse(message);
+      
+      return res.json({ response });
+    } catch (error) {
+      console.error("Error sending public message to chatbot:", error);
+      return res.status(500).json({ message: "Failed to communicate with chatbot" });
     }
   });
   
