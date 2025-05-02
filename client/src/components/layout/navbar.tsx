@@ -15,6 +15,30 @@ export default function Navbar() {
   const [productMenuOpen, setProductMenuOpen] = useState(false);
   const [companyMenuOpen, setCompanyMenuOpen] = useState(false);
   const [legalMenuOpen, setLegalMenuOpen] = useState(false);
+  
+  const productMenuRef = useRef<HTMLDivElement>(null);
+  const companyMenuRef = useRef<HTMLDivElement>(null);
+  const legalMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close the dropdown when clicking outside of it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (productMenuRef.current && !productMenuRef.current.contains(event.target as Node)) {
+        setProductMenuOpen(false);
+      }
+      if (companyMenuRef.current && !companyMenuRef.current.contains(event.target as Node)) {
+        setCompanyMenuOpen(false);
+      }
+      if (legalMenuRef.current && !legalMenuRef.current.contains(event.target as Node)) {
+        setLegalMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const navItemVariants = {
     hidden: { opacity: 0, y: -10 },
@@ -63,10 +87,141 @@ export default function Navbar() {
               </Link>
             </motion.div>
             
+            {/* Product Dropdown */}
+            <motion.div
+              custom={1}
+              initial="hidden"
+              animate="visible"
+              variants={navItemVariants}
+              className="relative"
+              ref={productMenuRef}
+            >
+              <button
+                className="flex items-center font-medium text-white/80 hover:text-white transition-colors cursor-pointer"
+                onClick={() => {
+                  setProductMenuOpen(!productMenuOpen);
+                  setCompanyMenuOpen(false);
+                  setLegalMenuOpen(false);
+                }}
+              >
+                <span>Product</span>
+                <ChevronDown className={`w-4 h-4 ml-1 transform transition-transform ${productMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {productMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-deepBlack/90 backdrop-blur-lg rounded-md shadow-lg py-2 z-50">
+                  <Link href="/product/features">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Features
+                    </div>
+                  </Link>
+                  <Link href="/product/pricing">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Pricing
+                    </div>
+                  </Link>
+                  <Link href="/product/integrations">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Integrations
+                    </div>
+                  </Link>
+                  <Link href="/product/enterprise">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Enterprise
+                    </div>
+                  </Link>
+                  <Link href="/product/security">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Security
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+            
+            {/* Company Dropdown */}
+            <motion.div
+              custom={2}
+              initial="hidden"
+              animate="visible"
+              variants={navItemVariants}
+              className="relative"
+              ref={companyMenuRef}
+            >
+              <button
+                className="flex items-center font-medium text-white/80 hover:text-white transition-colors cursor-pointer"
+                onClick={() => {
+                  setCompanyMenuOpen(!companyMenuOpen);
+                  setProductMenuOpen(false);
+                  setLegalMenuOpen(false);
+                }}
+              >
+                <span>Company</span>
+                <ChevronDown className={`w-4 h-4 ml-1 transform transition-transform ${companyMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {companyMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-deepBlack/90 backdrop-blur-lg rounded-md shadow-lg py-2 z-50">
+                  <Link href="/company/about">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      About
+                    </div>
+                  </Link>
+                  <Link href="/company/careers">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Careers
+                    </div>
+                  </Link>
+                  <Link href="/company/partners">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Partners
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+            
+            {/* Legal Dropdown */}
+            <motion.div
+              custom={3}
+              initial="hidden"
+              animate="visible"
+              variants={navItemVariants}
+              className="relative"
+              ref={legalMenuRef}
+            >
+              <button
+                className="flex items-center font-medium text-white/80 hover:text-white transition-colors cursor-pointer"
+                onClick={() => {
+                  setLegalMenuOpen(!legalMenuOpen);
+                  setProductMenuOpen(false);
+                  setCompanyMenuOpen(false);
+                }}
+              >
+                <span>Legal</span>
+                <ChevronDown className={`w-4 h-4 ml-1 transform transition-transform ${legalMenuOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {legalMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 bg-deepBlack/90 backdrop-blur-lg rounded-md shadow-lg py-2 z-50">
+                  <Link href="/legal/terms">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Terms of Service
+                    </div>
+                  </Link>
+                  <Link href="/legal/privacy">
+                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
+                      Privacy Policy
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </motion.div>
+            
             {user ? (
               <>
                 <motion.div
-                  custom={1}
+                  custom={4}
                   initial="hidden"
                   animate="visible"
                   variants={navItemVariants}
@@ -79,7 +234,7 @@ export default function Navbar() {
                 </motion.div>
                 
                 <motion.div
-                  custom={2}
+                  custom={5}
                   initial="hidden"
                   animate="visible"
                   variants={navItemVariants}
@@ -92,7 +247,7 @@ export default function Navbar() {
                 </motion.div>
                 
                 <motion.div
-                  custom={3}
+                  custom={6}
                   initial="hidden"
                   animate="visible"
                   variants={navItemVariants}
@@ -114,7 +269,7 @@ export default function Navbar() {
             ) : (
               <>
                 <motion.div
-                  custom={1}
+                  custom={4}
                   initial="hidden"
                   animate="visible"
                   variants={navItemVariants}
@@ -127,7 +282,7 @@ export default function Navbar() {
                 </motion.div>
                 
                 <motion.div
-                  custom={2}
+                  custom={5}
                   initial="hidden"
                   animate="visible"
                   variants={navItemVariants}
@@ -204,6 +359,7 @@ export default function Navbar() {
             </motion.button>
           </div>
           <div className="p-4 flex flex-col space-y-4">
+            {/* Main Navigation Links */}
             {[
               { label: "Home", path: "/", isMain: true },
               ...(user
@@ -232,6 +388,122 @@ export default function Navbar() {
                 </Link>
               </motion.div>
             ))}
+            
+            {/* Mobile Product Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.3 }}
+              className="border-t border-white/10 pt-4 mt-4"
+            >
+              <div className="text-white text-xl font-semibold mb-2">Product</div>
+              <div className="ml-2 space-y-2">
+                <Link href="/product/features">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Features
+                  </div>
+                </Link>
+                <Link href="/product/pricing">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Pricing
+                  </div>
+                </Link>
+                <Link href="/product/integrations">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Integrations
+                  </div>
+                </Link>
+                <Link href="/product/enterprise">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Enterprise
+                  </div>
+                </Link>
+                <Link href="/product/security">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Security
+                  </div>
+                </Link>
+              </div>
+            </motion.div>
+            
+            {/* Mobile Company Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5, duration: 0.3 }}
+              className="border-t border-white/10 pt-4 mt-4"
+            >
+              <div className="text-white text-xl font-semibold mb-2">Company</div>
+              <div className="ml-2 space-y-2">
+                <Link href="/company/about">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    About
+                  </div>
+                </Link>
+                <Link href="/company/careers">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Careers
+                  </div>
+                </Link>
+                <Link href="/company/partners">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Partners
+                  </div>
+                </Link>
+              </div>
+            </motion.div>
+            
+            {/* Mobile Legal Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6, duration: 0.3 }}
+              className="border-t border-white/10 pt-4 mt-4"
+            >
+              <div className="text-white text-xl font-semibold mb-2">Legal</div>
+              <div className="ml-2 space-y-2">
+                <Link href="/legal/terms">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Terms of Service
+                  </div>
+                </Link>
+                <Link href="/legal/privacy">
+                  <div 
+                    className="text-white/80 text-lg py-2 cursor-pointer"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Privacy Policy
+                  </div>
+                </Link>
+              </div>
+            </motion.div>
             
             {user && (
               <>

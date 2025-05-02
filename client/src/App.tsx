@@ -33,8 +33,8 @@ function ProtectedRoutes() {
       <Route path="/company/careers" component={() => <ContentPage category="company" subcategory="careers" />} />
       <Route path="/company/partners" component={() => <ContentPage category="company" subcategory="partners" />} />
       
-      <Route path="/legal/terms" component={() => <ContentPage category="company" subcategory="legal" slug="terms-of-service" />} />
-      <Route path="/legal/privacy" component={() => <ContentPage category="company" subcategory="legal" slug="privacy-policy" />} />
+      <Route path="/legal/terms" component={() => <ContentPage category="legal" subcategory="terms" />} />
+      <Route path="/legal/privacy" component={() => <ContentPage category="legal" subcategory="privacy" />} />
       
       {user ? (
         <>
