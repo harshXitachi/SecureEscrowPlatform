@@ -179,7 +179,7 @@ export default function ChatWidget() {
     <div
       className={cn(
         "fixed bottom-4 right-4 bg-card border rounded-lg shadow-xl flex flex-col transition-all duration-200 z-50",
-        isMinimized ? "w-72 h-14" : isMobile ? "w-[90vw] h-[70vh]" : "w-96 h-[600px]"
+        isMinimized ? "w-72 h-14" : mobileState.isMobile ? "w-[90vw] h-[70vh]" : "w-96 h-[600px]"
       )}
     >
       {/* Header */}
