@@ -246,6 +246,21 @@ export default function Navbar() {
                   </Link>
                 </motion.div>
                 
+                {user.role === "admin" && (
+                  <motion.div
+                    custom={6}
+                    initial="hidden"
+                    animate="visible"
+                    variants={navItemVariants}
+                  >
+                    <Link href="/admin">
+                      <span className="font-medium text-white/80 hover:text-white transition-colors cursor-pointer">
+                        Admin Panel
+                      </span>
+                    </Link>
+                  </motion.div>
+                )}
+                
                 <motion.div
                   custom={6}
                   initial="hidden"
@@ -366,6 +381,7 @@ export default function Navbar() {
                 ? [
                     { label: "Dashboard", path: "/dashboard" },
                     { label: "Transactions", path: "/transactions" },
+                    ...(user.role === "admin" ? [{ label: "Admin Panel", path: "/admin" }] : []),
                   ]
                 : [
                     { label: "Login", path: "/login" },
