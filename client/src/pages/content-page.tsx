@@ -13,14 +13,17 @@ interface ContentPageProps {
 const ContentPage: React.FC<ContentPageProps> = ({ category, subcategory, slug }) => {
   // Derived path for the API call
   const contentPath = slug 
-    ? `/api/pages/${slug}`
-    : `/api/${category}/${subcategory}`;
+    ? `/api/content/pages/${slug}`
+    : `/api/content/${category}/${subcategory}`;
 
   // Fetch content from API
-  const { data, isLoading, error } = useQuery<ContentPageType>({
+  const { data: rawData, isLoading, error } = useQuery<ContentPageType | ContentPageType[]>({
     queryKey: [contentPath],
     enabled: !!category && !!subcategory
   });
+  
+  // Handle both single object and array responses
+  const data = Array.isArray(rawData) ? rawData[0] : rawData;
 
   if (isLoading) {
     return (
