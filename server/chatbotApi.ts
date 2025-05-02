@@ -63,9 +63,9 @@ export function registerChatbotApiRoutes(app: Express) {
     try {
       const userId = req.session.userId;
       
-      // Get chat history
+      // Get chat history - in our schema, the sender is stored in senderId
       const chatHistory = await db.query.messages.findMany({
-        where: eq(messages.userId, userId),
+        where: eq(messages.senderId, userId),
         orderBy: (messages, { asc }) => [asc(messages.createdAt)],
         limit: 50,
       });
@@ -95,8 +95,8 @@ export function registerChatbotApiRoutes(app: Express) {
     try {
       const userId = req.session.userId;
       
-      // Delete chat history
-      await db.delete(messages).where(eq(messages.userId, userId));
+      // Delete chat history for this user
+      await db.delete(messages).where(eq(messages.senderId, userId));
       
       return res.json({ message: "Chat history cleared successfully" });
     } catch (error) {

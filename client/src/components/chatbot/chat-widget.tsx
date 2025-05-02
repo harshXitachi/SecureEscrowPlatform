@@ -247,7 +247,7 @@ export default function ChatWidget() {
                       className={cn(
                         "flex max-w-[85%] rounded-lg p-3 text-sm",
                         msg.isBot
-                          ? "bg-muted self-start rounded-tl-none"
+                          ? "bg-muted self-start rounded-tl-none text-foreground"
                           : "bg-primary text-primary-foreground self-end rounded-tr-none"
                       )}
                     >
@@ -305,7 +305,7 @@ export default function ChatWidget() {
                           }
                         }}
                         placeholder="Type your message..."
-                        className="w-full p-2 pr-8 border rounded-md resize-none h-10 min-h-10 max-h-32"
+                        className="w-full p-2 pr-8 border rounded-md resize-none h-10 min-h-10 max-h-32 text-foreground"
                         rows={1}
                       />
                       <div className="absolute right-2 bottom-2 text-muted-foreground">
