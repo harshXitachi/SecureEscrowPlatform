@@ -68,14 +68,10 @@ export default function DashboardPreview() {
               </div>
               <div className="flex gap-2">
                 <Link href="/create-transaction">
-                  <a>
-                    <GlassButton size="sm">+ New Transaction</GlassButton>
-                  </a>
+                  <GlassButton size="sm">+ New Transaction</GlassButton>
                 </Link>
                 <Link href="/transactions">
-                  <a>
-                    <GlassButton variant="secondary" size="sm">View All</GlassButton>
-                  </a>
+                  <GlassButton variant="secondary" size="sm">View All</GlassButton>
                 </Link>
               </div>
             </div>
