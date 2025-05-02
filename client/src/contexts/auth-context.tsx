@@ -58,13 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiRequest("POST", "/api/auth/login", {
-        username,
-        password,
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+        credentials: "include"
       });
 
       if (response.ok) {
         const userData = await response.json();
+        console.log("Login successful:", userData);
         queryClient.setQueryData(["/api/auth/me"], userData);
         navigate("/dashboard");
         return true;
@@ -78,14 +81,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await apiRequest("POST", "/api/auth/register", {
-        username,
-        password,
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+        credentials: "include"
       });
 
       if (response.ok) {
-        // Auto login after registration
-        return login(username, password);
+        const userData = await response.json();
+        console.log("Registration successful:", userData);
+        queryClient.setQueryData(["/api/auth/me"], userData);
+        navigate("/dashboard");
+        return true;
       }
       return false;
     } catch (error) {
