@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/contexts/auth-context";
 import { Redirect, Link } from "wouter";
 import {
   Card,
@@ -33,7 +33,7 @@ const formSchema = z.object({
 });
 
 export default function AdminLogin() {
-  const { user, isLoading, loginMutation } = useAuth();
+  const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const [adminCredentials] = useState({
     username: "middelman001",

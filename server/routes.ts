@@ -150,6 +150,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Find user
       const user = await db.query.users.findFirst({
         where: eq(users.username, username),
+        columns: {
+          id: true,
+          username: true,
+          password: true,
+          role: true,
+          createdAt: true,
+          updatedAt: true
+        }
       });
       
       if (!user) {
@@ -168,6 +176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Return user data without sensitive information
       const { password: _, ...userData } = user;
+      console.log("User logged in:", userData);
       return res.json(userData);
     } catch (error) {
       console.error("Login error:", error);
@@ -190,13 +199,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Not authenticated" });
     }
     
-    // Get current user - only return fields that exist in the database
+    // Get current user - include all necessary fields including role
     db.query.users.findFirst({
       where: eq(users.id, req.session.userId),
       columns: {
         id: true,
         username: true,
         createdAt: true,
+        role: true,
       },
     }).then(user => {
       if (!user) {
