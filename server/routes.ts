@@ -16,6 +16,10 @@ import pgSession from "connect-pg-simple";
 import { pool } from "@db";
 import Razorpay from "razorpay";
 import crypto from "crypto";
+import { WebSocketServer } from "ws";
+import { registerMarketplaceApiRoutes } from "./marketplaceApi";
+import { registerAdminApiRoutes } from "./adminApi";
+import { setupSwagger } from "./swagger";
 
 const PgStore = pgSession(session);
 
@@ -52,6 +56,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     })
   );
+  
+  // Register API documentation with Swagger
+  setupSwagger(app);
 
   // Authentication middleware
   const requireAuth = (req: any, res: any, next: any) => {
@@ -76,6 +83,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // API Prefix
   const apiPrefix = "/api";
+  
+  // Register marketplace API endpoints (OAuth 2.0 protected)
+  registerMarketplaceApiRoutes(app);
+  
+  // Register admin API endpoints
+  registerAdminApiRoutes(app);
 
   // Auth routes
   app.post(`${apiPrefix}/auth/register`, async (req, res) => {
