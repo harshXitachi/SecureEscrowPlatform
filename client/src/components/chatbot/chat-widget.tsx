@@ -156,24 +156,30 @@ export default function ChatWidget() {
 
   if (!isOpen) {
     return (
-      <Button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 rounded-full h-14 w-14 p-0 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
-        title="Chat with AI Assistant"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="h-6 w-6"
+      <div className="fixed bottom-4 right-4">
+        <Button
+          onClick={() => setIsOpen(true)}
+          className="rounded-full h-14 w-14 p-0 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground relative"
+          title="Chat with AI Assistant"
         >
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        </svg>
-      </Button>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-6 w-6"
+          >
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+          {/* Pulsing animation */}
+          <span className="absolute inset-0 rounded-full animate-ping bg-primary/40 -z-10"></span>
+          {/* AI badge */}
+          <span className="absolute -top-1 -right-1 bg-red-500 rounded-full w-5 h-5 flex items-center justify-center text-[10px] text-white font-bold">AI</span>
+        </Button>
+      </div>
     );
   }
 
