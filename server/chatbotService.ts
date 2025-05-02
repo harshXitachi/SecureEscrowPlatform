@@ -71,7 +71,7 @@ async function getUserDisputeInfo(userId: number) {
   const userDisputes = await db.query.disputes.findMany({
     where: (disputes, { or, eq }) => or(
       eq(disputes.raisedById, userId),
-      eq(disputes.defendantId, userId)
+      eq(disputes.assignedToId, userId) // The schema has assignedToId not defendantId
     ),
     with: {
       transaction: true,
@@ -184,8 +184,11 @@ export async function generateChatbotResponse(message: ChatMessage): Promise<str
     
     // Add conversation history
     conversationHistory.forEach(msg => {
+      // In our schema we don't have a 'isBot' field, so let's determine based on the message
+      // If the message's senderId is the same as userId, it's from the user, otherwise from the bot
+      const isUserMessage = msg.senderId === message.userId;
       openaiMessages.push({
-        role: msg.isBot ? "assistant" : "user",
+        role: isUserMessage ? "user" : "assistant",
         content: msg.content,
       });
     });
