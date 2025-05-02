@@ -22,6 +22,7 @@ import { registerAdminApiRoutes } from "./adminApi";
 import { setupSwagger } from "./swagger";
 import { registerChatbotApiRoutes } from "./chatbotApi";
 import { setupChatbotWebSocket } from "./chatbotWebSocket";
+import { registerContentApiRoutes } from "./contentApi";
 
 const PgStore = pgSession(session);
 
@@ -94,6 +95,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register chatbot API endpoints
   registerChatbotApiRoutes(app);
+  
+  // Register content API endpoints
+  registerContentApiRoutes(app);
 
   // Auth routes
   app.post(`${apiPrefix}/auth/register`, async (req, res) => {
