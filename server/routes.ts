@@ -155,8 +155,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           username: true,
           password: true,
           role: true,
-          createdAt: true,
-          updatedAt: true
+          createdAt: true
         }
       });
       
