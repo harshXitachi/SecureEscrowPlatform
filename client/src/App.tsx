@@ -13,6 +13,9 @@ import NotFound from "@/pages/not-found";
 import AdminPage from "@/pages/admin";
 import AdminUsersPage from "@/pages/admin/users";
 import AdminContentPage from "@/pages/admin/content";
+import AdminTransactionsPage from "@/pages/admin/transactions";
+import AdminDisputesPage from "@/pages/admin/disputes";
+import AdminLogin from "@/pages/admin/login";
 import { AuthProvider, useAuth } from "./contexts/auth-context";
 
 // This component is only rendered when Auth is available
@@ -24,6 +27,7 @@ function ProtectedRoutes() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/admin/login" component={AdminLogin} />
       
       {/* Content Pages */}
       <Route path="/product/features" component={() => <ContentPage category="product" subcategory="features" />} />
@@ -51,6 +55,8 @@ function ProtectedRoutes() {
               <Route path="/admin" component={AdminPage} />
               <Route path="/admin/users" component={AdminUsersPage} />
               <Route path="/admin/content" component={AdminContentPage} />
+              <Route path="/admin/transactions" component={AdminTransactionsPage} />
+              <Route path="/admin/disputes" component={AdminDisputesPage} />
             </>
           )}
         </>

@@ -32,34 +32,12 @@ export default function AdminPage() {
   }
 
   if (!user) {
-    return <Redirect to="/auth" />;
+    return <Redirect to="/admin/login" />;
   }
 
   // Check if admin access
   if (user.role !== "admin") {
-    return (
-      <div className="container mx-auto py-10">
-        <Card className="w-full max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-red-500">Access Denied</CardTitle>
-            <CardDescription>
-              You don't have permission to access the admin panel
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>
-              This area is restricted to admin users only. Please contact an
-              administrator if you need access.
-            </p>
-            <Link to="/">
-              <a className="mt-4 block text-blue-500 hover:underline">
-                Return to Home
-              </a>
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <Redirect to="/admin/login" />;
   }
 
   return (
