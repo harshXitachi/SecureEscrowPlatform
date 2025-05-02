@@ -41,13 +41,15 @@ export default function ChatWidget() {
 
   // Load chat history when widget opens
   useEffect(() => {
-    if (isOpen && user) {
+    if (isOpen) {
       const loadChatHistory = async () => {
-        try {
-          const history = await getChatHistory();
-          setMessages(history);
-        } catch (error) {
-          console.error("Failed to load chat history:", error);
+        if (user) {
+          try {
+            const history = await getChatHistory();
+            setMessages(history);
+          } catch (error) {
+            console.error("Failed to load chat history:", error);
+          }
         }
       };
 
@@ -290,31 +292,46 @@ export default function ChatWidget() {
 
               {/* Input */}
               <div className="p-3 border-t flex gap-2">
-                <div className="relative flex-1">
-                  <textarea
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSendMessage();
-                      }
-                    }}
-                    placeholder="Type your message..."
-                    className="w-full p-2 pr-8 border rounded-md resize-none h-10 min-h-10 max-h-32"
-                    rows={1}
-                  />
-                  <div className="absolute right-2 bottom-2 text-muted-foreground">
-                    <CornerDownLeft className="h-4 w-4" />
+                {user ? (
+                  <>
+                    <div className="relative flex-1">
+                      <textarea
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
+                        placeholder="Type your message..."
+                        className="w-full p-2 pr-8 border rounded-md resize-none h-10 min-h-10 max-h-32"
+                        rows={1}
+                      />
+                      <div className="absolute right-2 bottom-2 text-muted-foreground">
+                        <CornerDownLeft className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={handleSendMessage} 
+                      disabled={isLoading || !inputValue.trim()} 
+                      size="icon"
+                    >
+                      <Send className="h-4 w-4" />
+                    </Button>
+                  </>
+                ) : (
+                  <div className="w-full text-center p-2 bg-muted rounded-md">
+                    <p className="text-sm mb-1">Please log in to chat with our AI assistant</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.location.href = '/login'}
+                    >
+                      Login
+                    </Button>
                   </div>
-                </div>
-                <Button 
-                  onClick={handleSendMessage} 
-                  disabled={isLoading || !inputValue.trim()} 
-                  size="icon"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+                )}
               </div>
             </TabsContent>
 

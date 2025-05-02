@@ -46,7 +46,7 @@ function AuthenticatedApp() {
         <ProtectedRoutes />
       </main>
       <Footer />
-      {user && <ChatWidget />}
+      <ChatWidget />
     </div>
   );
 }
