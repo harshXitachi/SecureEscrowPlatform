@@ -3,17 +3,12 @@ import { createInsertSchema, createSelectSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
 
-// User model - Enhanced with additional fields
+// User model - Current database structure
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  email: text("email").unique(),
-  fullName: text("full_name"),
-  role: varchar("role", { length: 20 }).default("user").notNull(), // 'user', 'admin'
-  isVerified: boolean("is_verified").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 // Transaction model - Enhanced with payment and escrow status
@@ -200,8 +195,7 @@ export const transactionLogsRelations = relations(transactionLogs, ({ one }) => 
 export const insertUserSchema = createInsertSchema(users, {
   username: (schema) => schema.min(3, "Username must be at least 3 characters"),
   password: (schema) => schema.min(6, "Password must be at least 6 characters"),
-  email: (schema) => schema.optional().nullable().or(schema.email("Please enter a valid email")),
-}).omit({ createdAt: true, updatedAt: true, isVerified: true });
+}).omit({ createdAt: true });
 
 export const insertTransactionSchema = createInsertSchema(transactions, {
   title: (schema) => schema.min(3, "Title must be at least 3 characters"),
