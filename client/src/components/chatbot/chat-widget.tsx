@@ -35,7 +35,7 @@ export default function ChatWidget() {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const { isMobile } = useMobile();
+  const mobileState = useMobile();
   const { toast } = useToast();
   const websocketRef = useRef<ReturnType<typeof initChatbotWebSocket> | null>(null);
 
