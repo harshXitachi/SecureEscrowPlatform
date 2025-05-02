@@ -24,16 +24,12 @@ export default function CTASection() {
           </div>
           <div className="flex flex-wrap justify-center gap-4">
             <Link href="/register">
-              <a>
-                <GlassButton size="lg">Get Started Free</GlassButton>
-              </a>
+              <GlassButton size="lg">Get Started Free</GlassButton>
             </Link>
             <Link href="/contact">
-              <a>
-                <GlassButton variant="secondary" size="lg">
-                  Schedule a Demo
-                </GlassButton>
-              </a>
+              <GlassButton variant="secondary" size="lg">
+                Schedule a Demo
+              </GlassButton>
             </Link>
           </div>
         </div>
