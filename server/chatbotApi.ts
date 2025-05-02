@@ -4,7 +4,7 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { db } from "@db";
 import { messages } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 // Validate message middleware
 const validateMessage = (req: Request, res: Response, next: Function) => {
@@ -41,15 +41,29 @@ export function registerChatbotApiRoutes(app: Express) {
       const userId = req.session.userId;
       const { content, language } = req.body;
       
-      // Create message object
+      // Create message object for the AI service
       const message: ChatMessage = {
         content,
         userId,
         language,
       };
       
+      // Save user message to the database
+      await db.insert(messages).values({
+        content,
+        senderId: userId, // This is the correct field name in our messages table
+        isRead: true,
+      });
+      
       // Generate response
       const response = await generateChatbotResponse(message);
+      
+      // Save bot's response to the database (using system user ID 0 for bot)
+      await db.insert(messages).values({
+        content: response,
+        senderId: 0, // Using ID 0 to represent the system/bot
+        isRead: true,
+      });
       
       return res.json({ response });
     } catch (error) {
@@ -63,9 +77,12 @@ export function registerChatbotApiRoutes(app: Express) {
     try {
       const userId = req.session.userId;
       
-      // Get chat history - in our schema, the sender is stored in senderId
+      // Get chat history for both user messages and bot responses
+      // For simplicity, we're getting messages where the user is the sender or where the bot (senderId=0) is the sender
       const chatHistory = await db.query.messages.findMany({
-        where: eq(messages.senderId, userId),
+        where: userId !== undefined ? 
+          sql`(${messages.senderId} = ${userId} OR ${messages.senderId} = 0)` : 
+          undefined,
         orderBy: (messages, { asc }) => [asc(messages.createdAt)],
         limit: 50,
       });
@@ -95,8 +112,12 @@ export function registerChatbotApiRoutes(app: Express) {
     try {
       const userId = req.session.userId;
       
-      // Delete chat history for this user
-      await db.delete(messages).where(eq(messages.senderId, userId));
+      // Delete chat history for this user and related bot messages
+      if (userId !== undefined) {
+        await db.delete(messages).where(
+          sql`(${messages.senderId} = ${userId} OR ${messages.senderId} = 0)`
+        );
+      }
       
       return res.json({ message: "Chat history cleared successfully" });
     } catch (error) {

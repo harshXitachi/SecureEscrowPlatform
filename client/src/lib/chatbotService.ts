@@ -33,11 +33,12 @@ export const getChatHistory = async (): Promise<ChatMessage[]> => {
     const response = await apiRequest("GET", "/api/chatbot/history");
     const messages = await response.json();
     
+    // Process messages - bot messages have senderId = 0
     return messages.map((msg: any) => ({
       content: msg.content,
       userId: msg.senderId,
       timestamp: new Date(msg.createdAt),
-      isBot: msg.senderId !== msg.userId,
+      isBot: msg.senderId === 0,
     }));
   } catch (error) {
     console.error("Failed to get chat history:", error);
