@@ -69,7 +69,7 @@ export const clearChatHistory = async (): Promise<boolean> => {
 // Initialize WebSocket connection
 export const initChatbotWebSocket = (onMessageReceived: (message: ChatMessage) => void) => {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsUrl = `${protocol}//${window.location.host}/chatbot`;
+  const wsUrl = `${protocol}//${window.location.host}/ws/chatbot`;
   const socket = new WebSocket(wsUrl);
   
   socket.onopen = () => {
