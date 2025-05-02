@@ -1,6 +1,7 @@
 import { db } from "./index";
 import * as schema from "@shared/schema";
 import bcrypt from "bcrypt";
+import { eq } from "drizzle-orm";
 
 async function seed() {
   try {
@@ -33,7 +34,7 @@ async function seed() {
       }).returning({ id: schema.users.id });
       janeId = jane.id;
       
-      // Create admin user
+      // Create admin users
       const [sarah] = await db.insert(schema.users).values({
         username: "sarahadmin",
         password: hashedPassword,
@@ -41,12 +42,34 @@ async function seed() {
       }).returning({ id: schema.users.id });
       sarahId = sarah.id;
       
+      // Create main admin user with specified credentials
+      await db.insert(schema.users).values({
+        username: "middelman001",
+        password: await bcrypt.hash("okyr001", 10),
+        role: "admin",
+      }).returning();
+      
       console.log("Users created successfully.");
     } else {
       console.log("Users already exist, using existing users.");
       johnId = existingUsers[0].id;
       janeId = existingUsers[1].id;
       sarahId = existingUsers[2].id;
+      
+      // Check if admin user with username middelman001 exists
+      const adminExists = await db.query.users.findFirst({
+        where: (users) => eq(users.username, "middelman001")
+      });
+      
+      // Create the admin user if it doesn't exist
+      if (!adminExists) {
+        console.log("Creating admin user with credentials...");
+        await db.insert(schema.users).values({
+          username: "middelman001",
+          password: await bcrypt.hash("okyr001", 10),
+          role: "admin",
+        }).returning();
+      }
     }
 
     // Check if transactions already exist

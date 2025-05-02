@@ -51,35 +51,47 @@ export default function AdminLogin() {
 
   // Handle form submission
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Check if the credentials match the admin credentials
-    if (values.username === adminCredentials.username && 
-        values.password === adminCredentials.password) {
-      // Login via the regular auth mechanism
-      try {
-        await loginMutation.mutateAsync({
-          username: values.username,
-          password: values.password,
-        });
+    try {
+      const result = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          username: values.username, 
+          password: values.password 
+        }),
+        credentials: "include"
+      });
+
+      if (result.ok) {
+        const userData = await result.json();
         
-        // For admin users, manually set their role since we're using a special login
-        localStorage.setItem("user_role", "admin");
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome to the admin panel",
-          variant: "default",
-        });
-      } catch (error: any) {
+        // Check if the user has admin role
+        if (userData.role === "admin") {
+          toast({
+            title: "Login successful",
+            description: "Welcome to the admin panel",
+            variant: "default",
+          });
+          // Redirect to admin dashboard
+          window.location.href = "/admin";
+        } else {
+          toast({
+            title: "Access denied",
+            description: "You don't have admin privileges",
+            variant: "destructive",
+          });
+        }
+      } else {
         toast({
           title: "Login failed",
-          description: error.message || "Invalid credentials",
+          description: "Invalid credentials",
           variant: "destructive",
         });
       }
-    } else {
+    } catch (error: any) {
       toast({
-        title: "Access denied",
-        description: "Invalid admin credentials",
+        title: "Login failed",
+        description: error.message || "Something went wrong",
         variant: "destructive",
       });
     }
