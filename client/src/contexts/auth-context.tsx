@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   const {
-    data: user,
+    data: userData,
     isLoading,
     error,
   } = useQuery<User | null>({
@@ -48,13 +48,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error("Failed to fetch user");
         }
 
-        return response.json();
+        const userData = await response.json();
+        return userData as User;
       } catch (error) {
         console.error("Error fetching user:", error);
         return null;
       }
     },
   });
+  
+  // Create a definite typed user value
+  const user = userData !== undefined ? userData : null;
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
@@ -115,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user,
+        user: user || null,
         isLoading,
         login,
         register,
