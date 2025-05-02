@@ -20,6 +20,8 @@ import { WebSocketServer } from "ws";
 import { registerMarketplaceApiRoutes } from "./marketplaceApi";
 import { registerAdminApiRoutes } from "./adminApi";
 import { setupSwagger } from "./swagger";
+import { registerChatbotApiRoutes } from "./chatbotApi";
+import { setupChatbotWebSocket } from "./chatbotWebSocket";
 
 const PgStore = pgSession(session);
 
@@ -89,6 +91,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register admin API endpoints
   registerAdminApiRoutes(app);
+  
+  // Register chatbot API endpoints
+  registerChatbotApiRoutes(app);
 
   // Auth routes
   app.post(`${apiPrefix}/auth/register`, async (req, res) => {
@@ -568,6 +573,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Create HTTP server
   const httpServer = createServer(app);
+  
+  // Setup chatbot WebSocket
+  setupChatbotWebSocket(httpServer);
   
   return httpServer;
 }
