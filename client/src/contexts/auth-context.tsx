@@ -12,6 +12,7 @@ import { useLocation } from "wouter";
 export interface User {
   id: number;
   username: string;
+  role?: string;
 }
 
 interface AuthContextType {

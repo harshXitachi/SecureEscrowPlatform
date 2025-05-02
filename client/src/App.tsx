@@ -10,6 +10,9 @@ import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ContentPage from "@/pages/content-page";
 import NotFound from "@/pages/not-found";
+import AdminPage from "@/pages/admin";
+import AdminUsersPage from "@/pages/admin/users";
+import AdminContentPage from "@/pages/admin/content";
 import { AuthProvider, useAuth } from "./contexts/auth-context";
 
 // This component is only rendered when Auth is available
@@ -41,6 +44,15 @@ function ProtectedRoutes() {
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/transactions" component={Transactions} />
           <Route path="/create-transaction" component={CreateTransaction} />
+          
+          {/* Admin Routes */}
+          {user.role === "admin" && (
+            <>
+              <Route path="/admin" component={AdminPage} />
+              <Route path="/admin/users" component={AdminUsersPage} />
+              <Route path="/admin/content" component={AdminContentPage} />
+            </>
+          )}
         </>
       ) : null}
       
