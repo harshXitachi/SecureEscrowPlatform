@@ -159,16 +159,8 @@ export default function AdminLogin() {
               <Button 
                 type="submit" 
                 className="w-full" 
-                disabled={loginMutation.isPending}
               >
-                {loginMutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
+                Sign In
               </Button>
             </form>
           </Form>

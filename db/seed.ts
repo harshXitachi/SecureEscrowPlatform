@@ -24,6 +24,7 @@ async function seed() {
       const [john] = await db.insert(schema.users).values({
         username: "johnsmith",
         password: hashedPassword,
+        role: "user"
       }).returning({ id: schema.users.id });
       johnId = john.id;
       
@@ -31,6 +32,7 @@ async function seed() {
       const [jane] = await db.insert(schema.users).values({
         username: "janedoe",
         password: hashedPassword,
+        role: "user"
       }).returning({ id: schema.users.id });
       janeId = jane.id;
       

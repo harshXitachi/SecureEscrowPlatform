@@ -21,10 +21,10 @@ export default function AdminNavigation({
   activeTab,
   setActiveTab,
 }: AdminNavigationProps) {
-  const { user, logoutMutation } = useAuth();
+  const { user, logout } = useAuth();
 
   const handleLogout = () => {
-    logoutMutation.mutate();
+    logout();
   };
 
   return (
