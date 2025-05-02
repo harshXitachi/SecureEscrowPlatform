@@ -81,73 +81,41 @@
 }
 
 @layer utilities {
-  /* Glassmorphic UI components */
+  /* Plink-inspired UI components */
   .glass-card {
-    @apply bg-deepBlack/60 backdrop-blur-lg border border-white/10 rounded-lg shadow-lg transition-all duration-300;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    @apply bg-deepBlack/80 backdrop-blur-lg border border-white/10 rounded-lg shadow-lg transition-all duration-300;
   }
 
   .plink-card {
-    @apply bg-gradient-to-br from-indigo-600/30 to-purple-800/30 backdrop-blur-lg rounded-xl shadow-xl transition-all duration-300 border border-white/10;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    @apply bg-deepBlack/80 backdrop-blur-lg rounded-lg shadow-xl transition-all duration-300;
   }
 
   .blue-card {
-    @apply bg-gradient-to-br from-blue-500/40 to-indigo-800/30 backdrop-blur-lg rounded-xl shadow-xl transition-all duration-300 border border-white/10;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    @apply bg-darkBlue backdrop-blur-lg rounded-lg shadow-xl transition-all duration-300;
   }
 
   .glass-button {
-    @apply bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full px-6 py-3 font-bold shadow-lg transition-all duration-300 border border-blue-400/30;
-    box-shadow: 0 4px 16px rgba(0, 102, 204, 0.3);
+    @apply bg-primary text-white rounded-full px-6 py-3 font-bold shadow-md transition-all duration-300;
   }
 
   .glass-button:hover {
     @apply transform scale-[1.02] brightness-110;
-    box-shadow: 0 8px 24px rgba(0, 102, 204, 0.4);
   }
 
   .glass-button:active {
     @apply transform scale-[0.98];
-    box-shadow: 0 2px 8px rgba(0, 102, 204, 0.3);
   }
 
   .glass-input {
-    @apply bg-deepBlack/60 text-white backdrop-blur-md border border-white/10 rounded-lg transition-all duration-300;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    @apply bg-deepBlack/80 text-white backdrop-blur border border-white/10 rounded-md transition-all duration-300;
   }
 
   .glass-input:focus {
-    @apply bg-deepBlack/70 border-blue-400/50 outline-none;
-    box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2);
+    @apply bg-deepBlack/90 shadow-[0_0_0_3px_rgba(0,102,204,0.3)] border-primary/50 outline-none;
   }
 
   .glass-navbar {
-    @apply bg-deepBlack/80 backdrop-blur-xl border-b border-white/5;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  }
-  
-  /* Glassmorphic 3D effect */
-  .glass-3d {
-    transform-style: preserve-3d;
-    perspective: 1000px;
-  }
-  
-  .glass-panel {
-    @apply bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-lg border border-white/10 rounded-xl;
-    box-shadow: 
-      0 10px 30px rgba(0, 0, 0, 0.3),
-      inset 0 1px 1px rgba(255, 255, 255, 0.1);
-    transform-style: preserve-3d;
-    transition: transform 0.3s ease-out;
-  }
-  
-  .glass-depth {
-    transform: translateZ(20px);
-  }
-  
-  .glass-depth-lg {
-    transform: translateZ(40px);
+    @apply bg-deepBlack/90 backdrop-blur-xl border-b border-white/5 shadow-md;
   }
 
   .status-badge {

@@ -5,19 +5,17 @@ export const MorphingCircle = ({
   color = "bg-primary",
   duration = 6,
   delay = 0,
-  size = "w-32 h-32",
-  opacity = "opacity-30"
+  size = "w-32 h-32"
 }: { 
   className?: string,
   color?: string,
   duration?: number,
   delay?: number,
-  size?: string,
-  opacity?: string
+  size?: string
 }) => {
   return (
     <motion.div
-      className={`${size} ${color} rounded-full blur-lg ${opacity} ${className || ""}`}
+      className={`${size} ${color} rounded-full blur-lg opacity-30 ${className || ""}`}
       animate={{
         borderRadius: ["50%", "40%", "30%", "50%", "25%", "40%", "50%"],
         scale: [1, 1.2, 0.9, 1.1, 0.85, 1.05, 1],
