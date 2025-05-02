@@ -251,3 +251,180 @@ export type InsertDisputeEvidence = z.infer<typeof insertEvidenceSchema>;
 export type DisputeEvidence = typeof disputeEvidence.$inferSelect;
 
 export type TransactionLog = typeof transactionLogs.$inferSelect;
+
+// Content pages schema
+export const contentPages = pgTable("content_pages", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  category: text("category").notNull(), // 'product', 'resources', 'company'
+  subcategory: text("subcategory").notNull(), // 'features', 'pricing', etc.
+  isPublished: boolean("is_published").default(true).notNull(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const contentPagesRelations = relations(contentPages, ({ one }) => ({
+  // Relations can be added later if needed
+}));
+
+// Blog schema
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  summary: text("summary").notNull(),
+  content: text("content").notNull(),
+  authorId: integer("author_id").references(() => users.id),
+  coverImage: text("cover_image"),
+  isPublished: boolean("is_published").default(false).notNull(),
+  publishedAt: timestamp("published_at"),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const blogPostsRelations = relations(blogPosts, ({ one }) => ({
+  author: one(users, {
+    fields: [blogPosts.authorId],
+    references: [users.id],
+  }),
+}));
+
+// API reference schema
+export const apiDocs = pgTable("api_docs", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  version: text("version").notNull(),
+  endpoint: text("endpoint").notNull(),
+  method: text("method").notNull(), // GET, POST, PUT, DELETE, etc.
+  description: text("description").notNull(),
+  requestParams: text("request_params"), // JSON stringified
+  requestBody: text("request_body"), // JSON stringified
+  responseExample: text("response_example"), // JSON stringified
+  category: text("category").notNull(), // 'authentication', 'transactions', etc.
+  isPublished: boolean("is_published").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const apiDocsRelations = relations(apiDocs, ({ one }) => ({
+  // Relations can be added later if needed
+}));
+
+// Community schema
+export const communityThreads = pgTable("community_threads", {
+  id: serial("id").primaryKey(), 
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  authorId: integer("author_id").references(() => users.id).notNull(),
+  category: text("category").notNull(), // 'general', 'help', 'feature-requests', etc.
+  isPinned: boolean("is_pinned").default(false).notNull(),
+  isLocked: boolean("is_locked").default(false).notNull(),
+  viewCount: integer("view_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const communityReplies = pgTable("community_replies", {
+  id: serial("id").primaryKey(),
+  threadId: integer("thread_id").references(() => communityThreads.id).notNull(),
+  content: text("content").notNull(),
+  authorId: integer("author_id").references(() => users.id).notNull(),
+  isAcceptedAnswer: boolean("is_accepted_answer").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const communityThreadsRelations = relations(communityThreads, ({ one, many }) => ({
+  author: one(users, {
+    fields: [communityThreads.authorId],
+    references: [users.id],
+  }),
+  replies: many(communityReplies),
+}));
+
+export const communityRepliesRelations = relations(communityReplies, ({ one }) => ({
+  thread: one(communityThreads, {
+    fields: [communityReplies.threadId],
+    references: [communityThreads.id],
+  }),
+  author: one(users, {
+    fields: [communityReplies.authorId],
+    references: [users.id],
+  }),
+}));
+
+// Contact forms schema
+export const contactRequests = pgTable("contact_requests", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  company: text("company"),
+  phone: text("phone"),
+  message: text("message").notNull(),
+  department: text("department").notNull(), // 'sales', 'support', 'partnership', etc.
+  status: text("status").default("pending").notNull(), // 'pending', 'in_progress', 'resolved'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const contactRequestsRelations = relations(contactRequests, ({ one }) => ({
+  // Relations can be added later if needed
+}));
+
+// Create schemas for validation
+export const insertContentPageSchema = createInsertSchema(contentPages, {
+  title: (schema) => schema.min(3, "Title must be at least 3 characters"),
+  content: (schema) => schema.min(10, "Content must be at least 10 characters"),
+});
+
+export const insertBlogPostSchema = createInsertSchema(blogPosts, {
+  title: (schema) => schema.min(3, "Title must be at least 3 characters"),
+  content: (schema) => schema.min(10, "Content must be at least 10 characters"),
+  summary: (schema) => schema.min(10, "Summary must be at least 10 characters"),
+});
+
+export const insertApiDocSchema = createInsertSchema(apiDocs, {
+  title: (schema) => schema.min(3, "Title must be at least 3 characters"),
+  description: (schema) => schema.min(10, "Description must be at least 10 characters"),
+});
+
+export const insertCommunityThreadSchema = createInsertSchema(communityThreads, {
+  title: (schema) => schema.min(3, "Title must be at least 3 characters"),
+  content: (schema) => schema.min(10, "Content must be at least 10 characters"),
+});
+
+export const insertCommunityReplySchema = createInsertSchema(communityReplies, {
+  content: (schema) => schema.min(10, "Reply must be at least 10 characters"),
+});
+
+export const insertContactRequestSchema = createInsertSchema(contactRequests, {
+  name: (schema) => schema.min(2, "Name must be at least 2 characters"),
+  email: (schema) => schema.email("Please enter a valid email address"),
+  message: (schema) => schema.min(10, "Message must be at least 10 characters"),
+});
+
+// Export schema types
+export type ContentPage = typeof contentPages.$inferSelect;
+export type InsertContentPage = z.infer<typeof insertContentPageSchema>;
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+
+export type ApiDoc = typeof apiDocs.$inferSelect;
+export type InsertApiDoc = z.infer<typeof insertApiDocSchema>;
+
+export type CommunityThread = typeof communityThreads.$inferSelect;
+export type InsertCommunityThread = z.infer<typeof insertCommunityThreadSchema>;
+
+export type CommunityReply = typeof communityReplies.$inferSelect;
+export type InsertCommunityReply = z.infer<typeof insertCommunityReplySchema>;
+
+export type ContactRequest = typeof contactRequests.$inferSelect;
+export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
