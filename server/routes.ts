@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
-import { db } from "@db";
+import { db, mockUsers } from "@db";
 import { 
   users, transactions, milestones, disputes, messages, chatGroups, chatGroupMembers, 
   disputeEvidence, transactionLogs, 
@@ -23,6 +23,14 @@ import { setupSwagger } from "./swagger";
 import { registerChatbotApiRoutes } from "./chatbotApi";
 import { setupChatbotWebSocket } from "./chatbotWebSocket";
 import { registerContentApiRoutes } from "./contentApi";
+
+// Extend the session interface to include custom properties
+declare module 'express-session' {
+  interface SessionData {
+    userId: number;
+    username: string;
+  }
+}
 
 const PgStore = pgSession(session);
 
@@ -99,84 +107,240 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register content API endpoints
   registerContentApiRoutes(app);
 
+  // Test route for debugging
+  app.get(`${apiPrefix}/test/db`, async (req, res) => {
+    try {
+      console.log("DB test route called");
+      
+      // Get all mock users for debugging
+      const users = await db.query.users.findMany();
+      
+      // For security, don't return password hashes
+      const safeUsers = users.map(user => ({
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        hasPassword: !!user.password,
+        createdAt: user.createdAt
+      }));
+      
+      return res.json({
+        status: "Database connection successful",
+        mockMode: !process.env.DATABASE_URL,
+        userCount: safeUsers.length,
+        users: safeUsers
+      });
+    } catch (error) {
+      console.error("Error in test route:", error);
+      return res.status(500).json({
+        status: "Database connection error",
+        error: error.message
+      });
+    }
+  });
+
   // Auth routes
   app.post(`${apiPrefix}/auth/register`, async (req, res) => {
     try {
-      const validatedData = insertUserSchema.parse(req.body);
+      console.log("Registration attempt:", req.body);
       
-      // Check if username already exists
-      const existingUser = await db.query.users.findFirst({
-        where: eq(users.username, validatedData.username),
-      });
+      // Basic validation
+      if (!req.body.username || !req.body.password) {
+        console.log("Registration failed: missing username or password");
+        return res.status(400).json({ message: "Username and password are required" });
+      }
+      
+      // Normalize username and password
+      const username = String(req.body.username).trim();
+      const password = String(req.body.password);
+      
+      console.log(`Registration - Normalized values - Username: ${username}, Password length: ${password.length}`);
+      
+      // Check if username is valid
+      if (username.length < 3) {
+        console.log("Registration failed: username too short");
+        return res.status(400).json({ message: "Username must be at least 3 characters" });
+      }
+      
+      // Check if password is valid
+      if (password.length < 6) {
+        console.log("Registration failed: password too short");
+        return res.status(400).json({ message: "Password must be at least 6 characters" });
+      }
+      
+      // Simplified registration flow - reduce nesting for better error handling
+      
+      // Step 1: Check if username already exists
+      let existingUser = null;
+      try {
+        existingUser = await db.query.users.findFirst({
+          where: eq(users.username, username),
+        });
+        console.log("Existing user check result:", existingUser ? "Found" : "Not found");
+      } catch (findError) {
+        console.error("Error checking for existing user:", findError);
+        return res.status(500).json({ message: "Error checking username availability" });
+      }
       
       if (existingUser) {
+        console.log(`Registration failed: username ${username} already exists`);
         return res.status(400).json({ message: "Username already exists" });
       }
       
-      // Hash password
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(validatedData.password, saltRounds);
+      // Step 2: Hash the password
+      let hashedPassword;
+      try {
+        console.log("Hashing password");
+        const saltRounds = 10;
+        hashedPassword = await bcrypt.hash(password, saltRounds);
+        console.log("Password hashed successfully");
+      } catch (hashError) {
+        console.error("Error hashing password:", hashError);
+        return res.status(500).json({ message: "Error processing password" });
+      }
       
-      // Create user - only using fields that exist in the current database schema
-      const [newUser] = await db.insert(users).values({
-        username: validatedData.username,
-        password: hashedPassword,
-      }).returning({ 
-        id: users.id, 
-        username: users.username
-      });
+      // Step 3: Create the user
+      let newUser;
+      try {
+        console.log(`Creating new user: ${username}`);
+        [newUser] = await db.insert(users).values({
+          username: username,
+          password: hashedPassword,
+          role: 'user' // Explicitly set role
+        }).returning({ 
+          id: users.id, 
+          username: users.username,
+          role: users.role
+        });
+        
+        console.log("User created successfully:", newUser);
+      } catch (insertError) {
+        console.error("Error inserting user:", insertError);
+        
+        // Check if error is due to duplicate username (race condition)
+        if (insertError.code === "UNIQUE_VIOLATION" || 
+            insertError.message?.includes("already exists") || 
+            insertError.code === "23505") {
+          return res.status(400).json({ message: "Username already exists" });
+        }
+        
+        return res.status(500).json({ message: "Error creating user account" });
+      }
       
-      // Set session
+      // Step 4: Set session
+      if (!newUser || !newUser.id) {
+        console.error("User created but missing ID:", newUser);
+        return res.status(500).json({ message: "User account created but session could not be initialized" });
+      }
+      
       req.session.userId = newUser.id;
+      req.session.username = newUser.username;
       
+      console.log(`User registered successfully: ${newUser.username} (ID: ${newUser.id})`);
       return res.status(201).json(newUser);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ errors: error.errors });
-      }
-      console.error("Error creating user:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error("Unhandled error during registration:", error);
+      return res.status(500).json({ message: "Internal server error during registration" });
     }
   });
 
   app.post(`${apiPrefix}/auth/login`, async (req, res) => {
     try {
-      const { username, password } = req.body;
+      // Normalize inputs to avoid whitespace issues
+      const username = String(req.body.username || '').trim();
+      const password = String(req.body.password || '').trim();
+      
+      console.log(`Login attempt for user: ${username}, password provided: ${password ? 'yes' : 'no'}`);
       
       if (!username || !password) {
+        console.log("Login failed: missing username or password");
         return res.status(400).json({ message: "Username and password are required" });
       }
       
-      // Find user
-      const user = await db.query.users.findFirst({
-        where: eq(users.username, username),
-        columns: {
-          id: true,
-          username: true,
-          password: true,
-          role: true,
-          createdAt: true
+      // REGULAR USER LOGIN - use mockUsers directly
+      if (!process.env.DATABASE_URL) {
+        console.log(`Looking up user directly in mockUsers array: ${username}`);
+        
+        // Find user
+        const user = mockUsers.find(u => u.username === username);
+        
+        if (!user) {
+          console.log(`User not found in mockUsers array: ${username}`);
+          return res.status(401).json({ message: "Invalid credentials" });
         }
-      });
-      
-      if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        
+        try {
+          // Verify password
+          const isMatch = await bcrypt.compare(password, user.password);
+          
+          if (isMatch) {
+            req.session.userId = user.id;
+            req.session.username = user.username;
+            
+            console.log(`Regular user login successful: ${username}`);
+            return res.json({
+              id: user.id,
+              username: user.username,
+              role: user.role || 'user',
+              createdAt: user.createdAt || new Date()
+            });
+          } else {
+            console.log(`Password mismatch for user: ${username}`);
+            return res.status(401).json({ message: "Invalid credentials" });
+          }
+        } catch (err) {
+          console.error("Password verification error:", err);
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
       }
       
-      // Compare password
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      
-      if (!isPasswordValid) {
-        return res.status(401).json({ message: "Invalid credentials" });
+      // REAL DATABASE USERS (when DATABASE_URL is set)
+      try {
+        const user = await db.query.users.findFirst({
+          where: eq(users.username, username),
+          columns: {
+            id: true,
+            username: true,
+            password: true,
+            role: true,
+            createdAt: true
+          }
+        });
+        
+        if (!user) {
+          console.log(`User not found in database: ${username}`);
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
+        
+        if (!user.password) {
+          console.error(`User found but missing password field: ${username}`);
+          return res.status(500).json({ message: "Account configuration error" });
+        }
+        
+        // Verify password
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if (!isMatch) {
+          console.log(`Invalid password for database user: ${username}`);
+          return res.status(401).json({ message: "Invalid credentials" });
+        }
+        
+        // Set session
+        req.session.userId = user.id;
+        req.session.username = user.username;
+        
+        // Return user data
+        console.log(`Database user login successful: ${username}`);
+        return res.json({
+          id: user.id,
+          username: user.username,
+          role: user.role || 'user',
+          createdAt: user.createdAt
+        });
+      } catch (error) {
+        console.error("Database error during login:", error);
+        return res.status(500).json({ message: "Database error occurred" });
       }
-      
-      // Set session
-      req.session.userId = user.id;
-      
-      // Return user data without sensitive information
-      const { password: _, ...userData } = user;
-      console.log("User logged in:", userData);
-      return res.json(userData);
     } catch (error) {
       console.error("Login error:", error);
       return res.status(500).json({ message: "Internal server error" });
@@ -582,8 +746,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Many other endpoints...
-  
   // Create HTTP server
   const httpServer = createServer(app);
   

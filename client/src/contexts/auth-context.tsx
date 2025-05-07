@@ -63,6 +63,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
+      if (!username || !password) {
+        console.error("Username or password missing");
+        return false;
+      }
+      
+      console.log("Login attempt for:", username);
+      
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -70,22 +77,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: "include"
       });
 
+      console.log("Login response status:", response.status);
+      
       if (response.ok) {
         const userData = await response.json();
         console.log("Login successful:", userData);
         queryClient.setQueryData(["/api/auth/me"], userData);
-        navigate("/dashboard");
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+        
+        // Use direct window location for more reliable navigation
+        console.log("Redirecting to dashboard...");
+        window.location.href = "/dashboard";
         return true;
       }
+      
+      // Try to get error details from response
+      let errorMessage = "Login failed";
+      try {
+        const errorData = await response.json();
+        console.log("Login failed response:", errorData);
+        if (errorData && errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        console.error("Could not parse error response:", e);
+      }
+      
+      console.error(errorMessage);
       return false;
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("Login failed exception:", error);
       return false;
     }
   };
 
   const register = async (username: string, password: string): Promise<boolean> => {
     try {
+      console.log("Register function called with:", username);
+      
+      // Validate inputs before sending request
+      if (!username || !password) {
+        console.error("Username or password missing");
+        return false;
+      }
+      
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,16 +128,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: "include"
       });
 
+      console.log("Register response status:", response.status);
+      
       if (response.ok) {
         const userData = await response.json();
         console.log("Registration successful:", userData);
         queryClient.setQueryData(["/api/auth/me"], userData);
-        navigate("/dashboard");
+        queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+        
+        // Successfully registered and logged in
+        navigate("/"); // Redirect to home instead of dashboard until we confirm dashboard works
         return true;
       }
+      
+      // Try to get error details from response
+      let errorMessage = "Registration failed";
+      try {
+        const errorData = await response.json();
+        console.log("Registration failed response:", errorData);
+        if (errorData && errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (e) {
+        console.error("Could not parse error response:", e);
+      }
+      
+      console.error(errorMessage);
       return false;
     } catch (error) {
-      console.error("Registration failed:", error);
+      console.error("Registration failed exception:", error);
       return false;
     }
   };

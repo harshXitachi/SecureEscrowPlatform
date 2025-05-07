@@ -71,45 +71,70 @@ export const clearChatHistory = async (): Promise<boolean> => {
 
 // Initialize WebSocket connection
 export const initChatbotWebSocket = (onMessageReceived: (message: ChatMessage) => void) => {
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const wsUrl = `${protocol}//${window.location.host}/ws/chatbot`;
-  const socket = new WebSocket(wsUrl);
-  
-  socket.onopen = () => {
-    console.log("WebSocket connection established");
-  };
-  
-  socket.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    if (data.type === "message") {
-      const message: ChatMessage = {
-        content: data.content,
-        userId: data.senderId,
-        timestamp: new Date(data.timestamp),
-        isBot: true
-      };
-      onMessageReceived(message);
-    }
-  };
-  
-  socket.onerror = (error) => {
-    console.error("WebSocket error:", error);
-  };
-  
-  socket.onclose = () => {
-    console.log("WebSocket connection closed");
-  };
-  
-  return {
-    sendMessage: (content: string) => {
-      if (socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify({ type: "message", content }));
-      } else {
-        console.error("WebSocket is not open");
+  try {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    
+    // Use current hostname and port, defaulting to 5000 if needed
+    const host = window.location.hostname || "localhost";
+    
+    // Create WebSocket URL without port specification (let browser handle it)
+    const wsUrl = `${protocol}//${host}/ws/chatbot`;
+    
+    console.log(`Connecting to WebSocket at ${wsUrl}`);
+    
+    // Create WebSocket without any token
+    const socket = new WebSocket(wsUrl);
+    
+    socket.onopen = () => {
+      console.log("WebSocket connection established");
+    };
+    
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "message") {
+          const message: ChatMessage = {
+            content: data.content,
+            userId: data.senderId,
+            timestamp: new Date(data.timestamp),
+            isBot: true
+          };
+          onMessageReceived(message);
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
       }
-    },
-    close: () => {
-      socket.close();
-    }
-  };
+    };
+    
+    socket.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+    
+    socket.onclose = () => {
+      console.log("WebSocket connection closed");
+    };
+    
+    return {
+      sendMessage: (content: string) => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: "message", content }));
+        } else {
+          console.error("WebSocket is not open");
+        }
+      },
+      close: () => {
+        socket.close();
+      }
+    };
+  } catch (error) {
+    console.error("Failed to initialize WebSocket:", error);
+    
+    // Return a dummy implementation that doesn't fail
+    return {
+      sendMessage: (content: string) => {
+        console.log("WebSocket not available, message not sent:", content);
+      },
+      close: () => {}
+    };
+  }
 };

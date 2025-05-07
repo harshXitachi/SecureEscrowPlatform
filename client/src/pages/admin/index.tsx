@@ -1,22 +1,11 @@
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import { Redirect, Link } from "wouter";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
-import AdminNavigation from "@/components/admin/admin-navigation";
-import AdminDashboard from "@/components/admin/admin-dashboard";
+import EnhancedAdminNavigation from "@/components/admin/enhanced-admin-navigation";
+import EnhancedDashboard from "@/components/admin/enhanced-dashboard";
+import IPTrackingDashboard from "@/components/admin/ip-tracking-dashboard";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function AdminPage() {
   const { user, isLoading } = useAuth();
@@ -40,69 +29,45 @@ export default function AdminPage() {
     return <Redirect to="/admin/login" />;
   }
 
-  return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-900">
-      {/* Sidebar Navigation */}
-      <AdminNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+  // Render the appropriate component based on the active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard":
+        return <EnhancedDashboard />;
+      case "ip-tracking":
+        return <IPTrackingDashboard />;
+      case "users":
+      case "transactions":
+      case "disputes":
+      case "fee-structure":
+      case "financial-journal":
+      case "security":
+      default:
+        return (
+          <div className="flex h-full flex-col items-center justify-center p-8">
+            <h1 className="text-2xl font-bold mb-4">Coming Soon</h1>
+            <p className="text-gray-500 dark:text-gray-400 mb-8 text-center max-w-md">
+              This section is under development. We're working to bring you {activeTab.replace('-', ' ')} functionality soon.
+            </p>
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-3xl animate-pulse">
+              {activeTab.charAt(0).toUpperCase()}
+            </div>
+          </div>
+        );
+    }
+  };
 
-      {/* Main Content */}
-      <div className="flex-1 p-8 pt-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsContent value="dashboard" className="m-0">
-            <AdminDashboard />
-          </TabsContent>
-          
-          <TabsContent value="users" className="m-0">
-            <h2 className="text-3xl font-bold mb-6">User Management</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Manage user accounts, ban users, and reset passwords
-            </p>
-            <Link to="/admin/users">
-              <a className="text-blue-500 hover:underline">Go to User Management →</a>
-            </Link>
-          </TabsContent>
-          
-          <TabsContent value="transactions" className="m-0">
-            <h2 className="text-3xl font-bold mb-6">Transaction Management</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Monitor and manage all transactions in the system
-            </p>
-            <Link to="/admin/transactions">
-              <a className="text-blue-500 hover:underline">Go to Transaction Management →</a>
-            </Link>
-          </TabsContent>
-          
-          <TabsContent value="disputes" className="m-0">
-            <h2 className="text-3xl font-bold mb-6">Dispute Resolution</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Review and resolve user disputes
-            </p>
-            <Link to="/admin/disputes">
-              <a className="text-blue-500 hover:underline">Go to Dispute Resolution →</a>
-            </Link>
-          </TabsContent>
-          
-          <TabsContent value="content" className="m-0">
-            <h2 className="text-3xl font-bold mb-6">Content Management</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">
-              Manage website content, blog posts, and documentation
-            </p>
-            <Link to="/admin/content">
-              <a className="text-blue-500 hover:underline">Go to Content Management →</a>
-            </Link>
-          </TabsContent>
-          
-          <TabsContent value="reports" className="m-0">
-            <h2 className="text-3xl font-bold mb-6">Reports &amp; Analytics</h2>
-            <p className="text-gray-500 dark:text-gray-400 mb-8">
-              View system analytics and generate custom reports
-            </p>
-            <Link to="/admin/reports">
-              <a className="text-blue-500 hover:underline">Go to Reports & Analytics →</a>
-            </Link>
-          </TabsContent>
-        </Tabs>
+  return (
+    <TooltipProvider>
+      <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-950 dark:to-blue-950">
+        {/* Sidebar Navigation */}
+        <EnhancedAdminNavigation activeTab={activeTab} setActiveTab={setActiveTab} />
+
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-auto">
+          {renderContent()}
+        </div>
       </div>
-    </div>
+    </TooltipProvider>
   );
 }

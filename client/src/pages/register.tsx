@@ -3,73 +3,162 @@ import { Helmet } from "react-helmet";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
 import { GlassInput } from "@/components/ui/glass-input";
-import { useAuth } from "@/contexts/auth-context";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Register() {
-  const { register } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [formError, setFormError] = useState(""); // General form error
+  const [errors, setErrors] = useState({
+    username: "",
+    password: "",
+    confirmPassword: ""
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Validate form fields and set error messages
+  const validateForm = () => {
+    const newErrors = {
+      username: "",
+      password: "",
+      confirmPassword: ""
+    };
     
-    if (!username || !password || !confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
-      return;
+    let isValid = true;
+    
+    if (!username.trim()) {
+      newErrors.username = "Username is required";
+      isValid = false;
+    } else if (username.length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
+      isValid = false;
+    }
+    
+    if (!password) {
+      newErrors.password = "Password is required";
+      isValid = false;
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+      isValid = false;
     }
     
     if (password !== confirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
+      newErrors.confirmPassword = "Passwords don't match";
+      isValid = false;
     }
     
-    if (password.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive",
-      });
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Registration form submitted");
+    
+    // Reset error states
+    setFormError("");
+    
+    if (!validateForm()) {
+      console.log("Form validation failed");
       return;
     }
     
     setIsLoading(true);
     
     try {
-      const success = await register(username, password);
+      console.log("Attempting to register user:", username);
       
-      if (success) {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+        credentials: "include"
+      });
+      
+      console.log("Registration response status:", response.status);
+      
+      // Try to parse the response JSON (it might fail if there's a network error)
+      let responseData;
+      try {
+        responseData = await response.json();
+        console.log("Registration response data:", responseData);
+      } catch (parseError) {
+        console.error("Failed to parse response:", parseError);
+        // If we can't parse the response, create a generic error message
+        responseData = { message: "Server error during registration" };
+      }
+      
+      if (response.ok) {
+        console.log("Registration successful, attempting login");
         toast({
           title: "Success",
-          description: "Account created successfully",
+          description: "Account created successfully"
         });
-        navigate("/dashboard");
+        
+        // Login immediately after registration
+        try {
+          const loginResponse = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+            credentials: "include"
+          });
+          
+          console.log("Auto-login response status:", loginResponse.status);
+          
+          if (loginResponse.ok) {
+            console.log("Auto-login successful, redirecting to home");
+            // Redirect to home page after successful login
+            navigate("/");
+          } else {
+            console.log("Auto-login failed, redirecting to login page");
+            navigate("/login"); // Redirect to login if auto-login fails
+          }
+        } catch (loginError) {
+          console.error("Error during auto-login:", loginError);
+          navigate("/login");
+        }
       } else {
+        // Handle different error types based on status code
+        let errorMessage = responseData.message || "Registration failed";
+        
+        if (response.status === 500) {
+          console.error("Server error during registration:", responseData);
+          errorMessage = "Server error occurred. Please try again later.";
+        } else if (response.status === 400) {
+          console.error("Registration validation error:", responseData);
+          
+          // Handle specific validation errors
+          if (responseData.message.includes("already exists")) {
+            errorMessage = "This username is already taken. Please choose another one.";
+          } else if (responseData.message.includes("at least")) {
+            // Already handled by client-side validation, but just in case
+            errorMessage = responseData.message;
+          }
+        }
+        
+        setFormError(errorMessage);
+        
         toast({
           title: "Registration Failed",
-          description: "Username may already be taken",
-          variant: "destructive",
+          description: errorMessage,
+          variant: "destructive"
         });
       }
     } catch (error) {
+      console.error("Registration network error:", error);
+      setFormError("A network error occurred during registration. Please check your connection and try again.");
+      
       toast({
-        title: "Error",
-        description: "An error occurred during registration",
-        variant: "destructive",
+        title: "Connection Error",
+        description: "Could not connect to the server. Please try again later.",
+        variant: "destructive"
       });
     } finally {
       setIsLoading(false);
@@ -97,14 +186,28 @@ export default function Register() {
               <p className="text-darkBg opacity-80">
                 Join Middlesman for secure escrow transactions
               </p>
+              
+              {formError && (
+                <div className="mt-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {formError}
+                </div>
+              )}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form 
+              onSubmit={handleSubmit} 
+              className="space-y-6"
+              id="register-form"
+              name="register-form"
+              autoComplete="on"
+            >
               <div>
-                <label className="block text-darkBg font-medium mb-2">
+                <label htmlFor="username" className="block text-darkBg font-medium mb-2">
                   Username
                 </label>
                 <GlassInput
+                  id="username"
+                  name="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -125,14 +228,22 @@ export default function Register() {
                     </svg>
                   }
                   placeholder="Choose a username"
+                  aria-label="Username"
+                  required
+                  autoComplete="username"
                 />
+                {errors.username && (
+                  <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-darkBg font-medium mb-2">
+                <label htmlFor="password" className="block text-darkBg font-medium mb-2">
                   Password
                 </label>
                 <GlassInput
+                  id="password"
+                  name="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -153,14 +264,22 @@ export default function Register() {
                     </svg>
                   }
                   placeholder="Create a password"
+                  aria-label="Password"
+                  required
+                  autoComplete="new-password"
                 />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-darkBg font-medium mb-2">
+                <label htmlFor="confirmPassword" className="block text-darkBg font-medium mb-2">
                   Confirm Password
                 </label>
                 <GlassInput
+                  id="confirmPassword"
+                  name="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -181,7 +300,13 @@ export default function Register() {
                     </svg>
                   }
                   placeholder="Confirm your password"
+                  aria-label="Confirm Password"
+                  required
+                  autoComplete="new-password"
                 />
+                {errors.confirmPassword && (
+                  <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
+                )}
               </div>
 
               <div>
@@ -189,6 +314,8 @@ export default function Register() {
                   type="submit" 
                   fullWidth 
                   disabled={isLoading}
+                  id="register-button"
+                  name="register-button"
                 >
                   {isLoading ? "Creating Account..." : "Create Account"}
                 </GlassButton>

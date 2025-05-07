@@ -69,6 +69,11 @@ export default function ChatWidget() {
 
   // Setup WebSocket connection
   useEffect(() => {
+    // Skip WebSocket implementation for now to avoid errors
+    // Will use HTTP API instead
+    return;
+    
+    /*
     if (isOpen && user) {
       const onMessageReceived = (message: ChatMessage) => {
         setMessages(prevMessages => [...prevMessages, message]);
@@ -82,6 +87,7 @@ export default function ChatWidget() {
         }
       };
     }
+    */
   }, [isOpen, user]);
 
   // Scroll to bottom of messages
@@ -106,21 +112,16 @@ export default function ChatWidget() {
     setIsLoading(true);
     
     try {
-      // For authenticated users: Use WebSocket if available, fallback to HTTP API
-      // For non-authenticated users: Always use the public HTTP API
-      if (user && websocketRef.current) {
-        websocketRef.current.sendMessage(inputValue);
-      } else {
-        const response = await sendMessage(inputValue, language, !!user);
-        
-        const botMessage: ChatMessage = {
-          content: response,
-          isBot: true,
-          timestamp: new Date(),
-        };
-        
-        setMessages(prev => [...prev, botMessage]);
-      }
+      // Always use HTTP API instead of WebSocket
+      const response = await sendMessage(inputValue, language, !!user);
+      
+      const botMessage: ChatMessage = {
+        content: response,
+        isBot: true,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error("Failed to send message:", error);
       toast({

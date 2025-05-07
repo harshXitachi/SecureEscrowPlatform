@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import AnimatedLogo from "@/components/ui/animated-logo";
 import { FloatingElement } from "@/components/ui/morphing-shapes";
 import { ChevronDown } from "lucide-react";
+import { productContent } from "@/lib/product-content";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -39,6 +40,13 @@ export default function Navbar() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Handle product section click
+  const handleProductSectionClick = (section: string) => {
+    // Navigate to the product page instead of showing a popup
+    window.location.href = `/product/${section}`;
+    setProductMenuOpen(false); // Close the dropdown
+  };
 
   const navItemVariants = {
     hidden: { opacity: 0, y: -10 },
@@ -110,31 +118,25 @@ export default function Navbar() {
               
               {productMenuOpen && (
                 <div className="absolute top-full left-0 mt-2 w-48 bg-deepBlack/90 backdrop-blur-lg rounded-md shadow-lg py-2 z-50">
-                  <Link href="/product/features">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Features
-                    </div>
-                  </Link>
-                  <Link href="/product/pricing">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Pricing
-                    </div>
-                  </Link>
-                  <Link href="/product/integrations">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Integrations
-                    </div>
-                  </Link>
-                  <Link href="/product/enterprise">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Enterprise
-                    </div>
-                  </Link>
-                  <Link href="/product/security">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Security
-                    </div>
-                  </Link>
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {['features', 'pricing', 'integrations', 'enterprise', 'security'].map((section, index) => (
+                      <motion.div
+                        key={section}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05, duration: 0.2 }}
+                        className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer"
+                        onClick={() => handleProductSectionClick(section)}
+                        whileHover={{ x: 5 }}
+                      >
+                        {section.charAt(0).toUpperCase() + section.slice(1)}
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </div>
               )}
             </motion.div>
@@ -162,21 +164,27 @@ export default function Navbar() {
               
               {companyMenuOpen && (
                 <div className="absolute top-full left-0 mt-2 w-48 bg-deepBlack/90 backdrop-blur-lg rounded-md shadow-lg py-2 z-50">
-                  <Link href="/company/about">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      About
-                    </div>
-                  </Link>
-                  <Link href="/company/careers">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Careers
-                    </div>
-                  </Link>
-                  <Link href="/company/partners">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Partners
-                    </div>
-                  </Link>
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {['about', 'careers', 'partners'].map((section, index) => (
+                      <motion.div 
+                        key={section}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05, duration: 0.2 }}
+                        whileHover={{ x: 5, backgroundColor: "rgba(59, 130, 246, 0.1)" }}
+                      >
+                        <Link href={`/company/${section}`}>
+                          <div className="px-4 py-2 text-white/80 hover:text-white transition-colors cursor-pointer">
+                            {section.charAt(0).toUpperCase() + section.slice(1)}
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </div>
               )}
             </motion.div>
@@ -204,16 +212,30 @@ export default function Navbar() {
               
               {legalMenuOpen && (
                 <div className="absolute top-full left-0 mt-2 w-48 bg-deepBlack/90 backdrop-blur-lg rounded-md shadow-lg py-2 z-50">
-                  <Link href="/legal/terms">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Terms of Service
-                    </div>
-                  </Link>
-                  <Link href="/legal/privacy">
-                    <div className="px-4 py-2 text-white/80 hover:text-white hover:bg-primary/20 transition-colors cursor-pointer">
-                      Privacy Policy
-                    </div>
-                  </Link>
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    {[
+                      { section: 'terms', label: 'Terms of Service' },
+                      { section: 'privacy', label: 'Privacy Policy' }
+                    ].map((item, index) => (
+                      <motion.div 
+                        key={item.section}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05, duration: 0.2 }}
+                        whileHover={{ x: 5, backgroundColor: "rgba(59, 130, 246, 0.1)" }}
+                      >
+                        <Link href={`/legal/${item.section}`}>
+                          <div className="px-4 py-2 text-white/80 hover:text-white transition-colors cursor-pointer">
+                            {item.label}
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </div>
               )}
             </motion.div>
@@ -414,46 +436,23 @@ export default function Navbar() {
             >
               <div className="text-white text-xl font-semibold mb-2">Product</div>
               <div className="ml-2 space-y-2">
-                <Link href="/product/features">
-                  <div 
+                {['features', 'pricing', 'integrations', 'enterprise', 'security'].map((section, index) => (
+                  <motion.div
+                    key={section}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.4 + (index * 0.1), duration: 0.3 }}
                     className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
+                    onClick={() => {
+                      handleProductSectionClick(section);
+                      setMobileMenuOpen(false);
+                    }}
+                    whileHover={{ x: 5, color: "#ffffff" }}
+                    whileTap={{ scale: 0.97 }}
                   >
-                    Features
-                  </div>
-                </Link>
-                <Link href="/product/pricing">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Pricing
-                  </div>
-                </Link>
-                <Link href="/product/integrations">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Integrations
-                  </div>
-                </Link>
-                <Link href="/product/enterprise">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Enterprise
-                  </div>
-                </Link>
-                <Link href="/product/security">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Security
-                  </div>
-                </Link>
+                    {section.charAt(0).toUpperCase() + section.slice(1)}
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
             
@@ -466,30 +465,25 @@ export default function Navbar() {
             >
               <div className="text-white text-xl font-semibold mb-2">Company</div>
               <div className="ml-2 space-y-2">
-                <Link href="/company/about">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
+                {['about', 'careers', 'partners'].map((section, index) => (
+                  <motion.div
+                    key={section}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.5 + (index * 0.1), duration: 0.3 }}
+                    whileHover={{ x: 5, color: "#ffffff" }}
+                    whileTap={{ scale: 0.97 }}
                   >
-                    About
-                  </div>
-                </Link>
-                <Link href="/company/careers">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Careers
-                  </div>
-                </Link>
-                <Link href="/company/partners">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Partners
-                  </div>
-                </Link>
+                    <Link href={`/company/${section}`}>
+                      <div 
+                        className="text-white/80 text-lg py-2 cursor-pointer"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {section.charAt(0).toUpperCase() + section.slice(1)}
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
             
@@ -502,22 +496,28 @@ export default function Navbar() {
             >
               <div className="text-white text-xl font-semibold mb-2">Legal</div>
               <div className="ml-2 space-y-2">
-                <Link href="/legal/terms">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
+                {[
+                  { section: 'terms', label: 'Terms of Service' },
+                  { section: 'privacy', label: 'Privacy Policy' }
+                ].map((item, index) => (
+                  <motion.div
+                    key={item.section}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 + (index * 0.1), duration: 0.3 }}
+                    whileHover={{ x: 5, color: "#ffffff" }}
+                    whileTap={{ scale: 0.97 }}
                   >
-                    Terms of Service
-                  </div>
-                </Link>
-                <Link href="/legal/privacy">
-                  <div 
-                    className="text-white/80 text-lg py-2 cursor-pointer"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Privacy Policy
-                  </div>
-                </Link>
+                    <Link href={`/legal/${item.section}`}>
+                      <div 
+                        className="text-white/80 text-lg py-2 cursor-pointer"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
             

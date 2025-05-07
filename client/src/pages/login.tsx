@@ -3,23 +3,26 @@ import { Helmet } from "react-helmet";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
 import { GlassInput } from "@/components/ui/glass-input";
-import { useAuth } from "@/contexts/auth-context";
 import { Link, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
-  const { login } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loginError, setLoginError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Reset error state
+    setLoginError("");
+    
     if (!username || !password) {
+      setLoginError("Please fill in all fields");
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -31,25 +34,71 @@ export default function Login() {
     setIsLoading(true);
     
     try {
-      const success = await login(username, password);
+      console.log("Attempting login with:", username);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+        credentials: "include"
+      });
       
-      if (success) {
+      // Handle successful response
+      if (response.ok) {
         toast({
           title: "Success",
           description: "You've been logged in successfully",
         });
-        navigate("/dashboard");
-      } else {
-        toast({
-          title: "Login Failed",
-          description: "Invalid username or password",
-          variant: "destructive",
-        });
+        // Force navigation to dashboard on success
+        window.location.href = "/dashboard";
+        return;
       }
+      
+      // Handle error responses
+      let errorMessage = "Invalid username or password";
+      try {
+        const errorData = await response.json();
+        if (errorData && errorData.message) {
+          errorMessage = errorData.message;
+          
+          // Special handling for test accounts
+          if (errorMessage.includes("dev mode") || errorMessage.includes("test accounts")) {
+            errorMessage = "For test accounts, use 'password123' as the password.";
+          }
+        }
+      } catch (parseError) {
+        console.error("Error parsing error response:", parseError);
+        
+        // Handle specific HTTP status codes
+        if (response.status === 500) {
+          errorMessage = "Internal server error. Please try one of the test accounts listed below.";
+        } else if (response.status === 401) {
+          // Highlight test accounts if user is trying to log in with one
+          if (["test", "admin", "mockuser"].includes(username)) {
+            errorMessage = "For test accounts, please use 'password123' as the password.";
+          } else {
+            errorMessage = "Invalid username or password.";
+          }
+        } else if (response.status === 404) {
+          errorMessage = "Login service unavailable. Server may be down.";
+        }
+      }
+      
+      console.error("Login failed:", response.status, errorMessage);
+      setLoginError(errorMessage);
+      
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
     } catch (error) {
+      console.error("Login request error:", error);
+      const errorMessage = "A network error occurred during login";
+      setLoginError(errorMessage);
+      
       toast({
         title: "Error",
-        description: "An error occurred during login",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -78,14 +127,25 @@ export default function Login() {
               <p className="text-darkBg opacity-80">
                 Sign in to your Middlesman account
               </p>
+              {loginError && (
+                <div className="mt-4 p-2 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {loginError}
+                </div>
+              )}
+              <div className="mt-2 text-sm text-indigo-600">
+                <p>Available test accounts:</p>
+                <p>Username: test, Password: password123</p>
+              </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on" id="login-form" name="login-form">
               <div>
-                <label className="block text-darkBg font-medium mb-2">
+                <label htmlFor="username" className="block text-darkBg font-medium mb-2">
                   Username
                 </label>
                 <GlassInput
+                  id="username"
+                  name="username"
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -106,14 +166,19 @@ export default function Login() {
                     </svg>
                   }
                   placeholder="Enter your username"
+                  aria-label="Username"
+                  required
+                  autoComplete="username"
                 />
               </div>
 
               <div>
-                <label className="block text-darkBg font-medium mb-2">
+                <label htmlFor="password" className="block text-darkBg font-medium mb-2">
                   Password
                 </label>
                 <GlassInput
+                  id="password"
+                  name="password" 
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -134,6 +199,9 @@ export default function Login() {
                     </svg>
                   }
                   placeholder="Enter your password"
+                  aria-label="Password"
+                  required
+                  autoComplete="current-password"
                 />
               </div>
 
@@ -142,6 +210,9 @@ export default function Login() {
                   type="submit" 
                   fullWidth 
                   disabled={isLoading}
+                  id="login-button"
+                  name="login-button"
+                  onClick={() => console.log("Login button clicked")}
                 >
                   {isLoading ? "Signing in..." : "Sign In"}
                 </GlassButton>

@@ -4,10 +4,25 @@ import { db } from "@db";
 import { messages, users, transactions, disputes } from "@shared/schema";
 import { eq, and, desc } from "drizzle-orm";
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Initialize OpenAI client - with fallback for local development
+let openai;
+try {
+  openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || 'mock-key-for-local-development',
+  });
+} catch (error) {
+  console.warn("OpenAI initialization failed, using mock responses for local development");
+  // Mock implementation for local development
+  openai = {
+    chat: {
+      completions: {
+        create: async () => ({
+          choices: [{ message: { content: "This is a mock response for local development. OpenAI API key is not configured." } }]
+        })
+      }
+    }
+  };
+}
 
 // Message validation schema
 const chatMessageSchema = z.object({

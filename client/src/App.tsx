@@ -15,7 +15,18 @@ import AdminUsersPage from "@/pages/admin/users";
 import AdminContentPage from "@/pages/admin/content";
 import AdminTransactionsPage from "@/pages/admin/transactions";
 import AdminDisputesPage from "@/pages/admin/disputes";
-import AdminLogin from "@/pages/admin/login";
+import AdminEnhancedLogin from "@/pages/admin/new-login";
+import AdminDashboard from "@/pages/admin/dashboard";
+import AboutPage from "@/pages/company/about";
+import CareersPage from "@/pages/company/careers";
+import PartnersPage from "@/pages/company/partners";
+import TermsPage from "@/pages/legal/terms";
+import PrivacyPage from "@/pages/legal/privacy";
+import FeaturesPage from "@/pages/product/features";
+import PricingPage from "@/pages/product/pricing";
+import IntegrationsPage from "@/pages/product/integrations";
+import EnterprisePage from "@/pages/product/enterprise";
+import SecurityPage from "@/pages/product/security";
 import { AuthProvider, useAuth } from "./contexts/auth-context";
 
 // This component is only rendered when Auth is available
@@ -27,40 +38,40 @@ function ProtectedRoutes() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/login" component={AdminEnhancedLogin} />
       
-      {/* Content Pages */}
-      <Route path="/product/features" component={() => <ContentPage category="product" subcategory="features" />} />
-      <Route path="/product/pricing" component={() => <ContentPage category="product" subcategory="pricing" />} />
-      <Route path="/product/integrations" component={() => <ContentPage category="product" subcategory="integrations" />} />
-      <Route path="/product/enterprise" component={() => <ContentPage category="product" subcategory="enterprise" />} />
-      <Route path="/product/security" component={() => <ContentPage category="product" subcategory="security" />} />
+      {/* User Dashboard and Transaction Routes - no longer conditionally rendered */}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/transactions" component={Transactions} />
+      <Route path="/create-transaction" component={CreateTransaction} />
       
-      <Route path="/company/about" component={() => <ContentPage category="company" subcategory="about" />} />
-      <Route path="/company/careers" component={() => <ContentPage category="company" subcategory="careers" />} />
-      <Route path="/company/partners" component={() => <ContentPage category="company" subcategory="partners" />} />
+      {/* Product Pages */}
+      <Route path="/product/features" component={FeaturesPage} />
+      <Route path="/product/pricing" component={PricingPage} />
+      <Route path="/product/integrations" component={IntegrationsPage} />
+      <Route path="/product/enterprise" component={EnterprisePage} />
+      <Route path="/product/security" component={SecurityPage} />
       
-      <Route path="/legal/terms" component={() => <ContentPage category="legal" subcategory="terms" />} />
-      <Route path="/legal/privacy" component={() => <ContentPage category="legal" subcategory="privacy" />} />
+      {/* Company Pages */}
+      <Route path="/company/about" component={AboutPage} />
+      <Route path="/company/careers" component={CareersPage} />
+      <Route path="/company/partners" component={PartnersPage} />
       
-      {user ? (
+      {/* Legal Pages */}
+      <Route path="/legal/terms" component={TermsPage} />
+      <Route path="/legal/privacy" component={PrivacyPage} />
+      
+      {/* Admin Routes - these are still protected by role */}
+      {user && user.role === "admin" && (
         <>
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/transactions" component={Transactions} />
-          <Route path="/create-transaction" component={CreateTransaction} />
-          
-          {/* Admin Routes */}
-          {user.role === "admin" && (
-            <>
-              <Route path="/admin" component={AdminPage} />
-              <Route path="/admin/users" component={AdminUsersPage} />
-              <Route path="/admin/content" component={AdminContentPage} />
-              <Route path="/admin/transactions" component={AdminTransactionsPage} />
-              <Route path="/admin/disputes" component={AdminDisputesPage} />
-            </>
-          )}
+          <Route path="/admin" component={AdminPage} />
+          <Route path="/admin/dashboard" component={AdminDashboard} />
+          <Route path="/admin/users" component={AdminUsersPage} />
+          <Route path="/admin/content" component={AdminContentPage} />
+          <Route path="/admin/transactions" component={AdminTransactionsPage} />
+          <Route path="/admin/disputes" component={AdminDisputesPage} />
         </>
-      ) : null}
+      )}
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />
@@ -70,8 +81,6 @@ function ProtectedRoutes() {
 
 // The authenticated part of the app that uses the auth context
 function AuthenticatedApp() {
-  const { user } = useAuth();
-  
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
