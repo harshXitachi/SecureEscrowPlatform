@@ -27,6 +27,9 @@ import PricingPage from "@/pages/product/pricing";
 import IntegrationsPage from "@/pages/product/integrations";
 import EnterprisePage from "@/pages/product/enterprise";
 import SecurityPage from "@/pages/product/security";
+import BuyerDashboard from "@/pages/dashboard/buyer-dashboard";
+import SellerDashboard from "@/pages/dashboard/seller-dashboard";
+import BrokerDashboard from "@/pages/dashboard/broker-dashboard";
 import { AuthProvider, useAuth } from "./contexts/auth-context";
 
 // This component is only rendered when Auth is available
@@ -40,8 +43,11 @@ function ProtectedRoutes() {
       <Route path="/register" component={Register} />
       <Route path="/admin/login" component={AdminEnhancedLogin} />
       
-      {/* User Dashboard and Transaction Routes - no longer conditionally rendered */}
+      {/* User Dashboard and Transaction Routes */}
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/buyer" component={BuyerDashboard} />
+      <Route path="/dashboard/seller" component={SellerDashboard} />
+      <Route path="/dashboard/broker" component={BrokerDashboard} />
       <Route path="/transactions" component={Transactions} />
       <Route path="/create-transaction" component={CreateTransaction} />
       

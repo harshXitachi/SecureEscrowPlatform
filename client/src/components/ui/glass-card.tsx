@@ -1,42 +1,26 @@
+import { ReactNode, forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 interface GlassCardProps extends React.HTMLAttributes<HTMLDivElement> {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
-  animate?: "fade-in" | "slide-up" | "scale";
-  stagger?: 1 | 2 | 3 | 4 | 5;
-  opacity?: "low" | "medium" | "high";
 }
 
-export function GlassCard({
-  children,
-  className,
-  animate,
-  stagger,
-  opacity = "medium",
-  ...props
-}: GlassCardProps) {
-  const opacityClass = {
-    low: "bg-white/40",
-    medium: "bg-white/60",
-    high: "bg-white/80",
-  }[opacity];
+export const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
+  ({ children, className, ...props }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm",
+          className
+        )}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+)
 
-  const animationClass = animate
-    ? `animate-${animate} ${stagger ? `stagger-${stagger}` : ""}`
-    : "";
-
-  return (
-    <div
-      className={cn(
-        "glass-card p-6",
-        opacityClass,
-        animationClass,
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </div>
-  );
-}
+GlassCard.displayName = "GlassCard";

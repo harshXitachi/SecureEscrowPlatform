@@ -18,8 +18,8 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
-  register: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string, role?: string) => Promise<boolean>;
+  register: (username: string, password: string, role?: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -61,19 +61,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Create a definite typed user value
   const user = userData !== undefined ? userData : null;
 
-  const login = async (username: string, password: string): Promise<boolean> => {
+  const login = async (username: string, password: string, role: string = "buyer"): Promise<boolean> => {
     try {
       if (!username || !password) {
         console.error("Username or password missing");
         return false;
       }
       
-      console.log("Login attempt for:", username);
+      console.log("Login attempt for:", username, "with role preference:", role);
       
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, role }),
         credentials: "include"
       });
 
@@ -85,9 +85,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         queryClient.setQueryData(["/api/auth/me"], userData);
         queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
         
-        // Use direct window location for more reliable navigation
-        console.log("Redirecting to dashboard...");
-        window.location.href = "/dashboard";
+        // Redirect based on user role
+        const userRole = userData?.role || role;
+        
+        switch(userRole) {
+          case 'buyer':
+            window.location.href = "/dashboard/buyer";
+            break;
+          case 'seller':
+            window.location.href = "/dashboard/seller";
+            break;
+          case 'broker':
+            window.location.href = "/dashboard/broker";
+            break;
+          case 'admin':
+            window.location.href = "/admin/dashboard";
+            break;
+          default:
+            window.location.href = "/dashboard";
+        }
         return true;
       }
       
@@ -97,7 +113,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const errorData = await response.json();
         console.log("Login failed response:", errorData);
         if (errorData && errorData.message) {
-          errorMessage = errorData.message;
+          // Remove any test account references
+          if (errorData.message.includes("test accounts") || errorData.message.includes("password123")) {
+            errorMessage = "Invalid username or password";
+          } else {
+            errorMessage = errorData.message;
+          }
         }
       } catch (e) {
         console.error("Could not parse error response:", e);
@@ -111,9 +132,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = async (username: string, password: string): Promise<boolean> => {
+  const register = async (username: string, password: string, role: string = "buyer"): Promise<boolean> => {
     try {
-      console.log("Register function called with:", username);
+      console.log("Register function called with:", username, "and role:", role);
       
       // Validate inputs before sending request
       if (!username || !password) {
@@ -124,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, role }),
         credentials: "include"
       });
 
@@ -136,8 +157,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         queryClient.setQueryData(["/api/auth/me"], userData);
         queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
         
-        // Successfully registered and logged in
-        navigate("/"); // Redirect to home instead of dashboard until we confirm dashboard works
+        // Redirect to role-specific dashboard
+        switch(role) {
+          case 'buyer':
+            navigate("/dashboard/buyer");
+            break;
+          case 'seller':
+            navigate("/dashboard/seller");
+            break;
+          case 'broker':
+            navigate("/dashboard/broker");
+            break;
+          default:
+            navigate("/dashboard");
+        }
         return true;
       }
       

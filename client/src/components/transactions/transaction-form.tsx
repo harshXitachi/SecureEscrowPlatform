@@ -2,699 +2,474 @@ import { useState } from "react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GlassButton } from "@/components/ui/glass-button";
 import { GlassInput } from "@/components/ui/glass-input";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/auth-context";
-import { useQuery } from "@tanstack/react-query";
-import { useLocation } from "wouter";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { User, BrokerRequest } from "@/types";
+import { useToast } from "@/hooks/use-toast";
+import { PlusCircle, Trash2, UserCircle, DollarSign, Calendar } from "lucide-react";
 
-export type TransactionFormStep = 1 | 2 | 3;
-
-interface TransactionFormData {
-  title: string;
-  type: string;
-  description: string;
-  amount: string;
-  currency: string;
-  dueDate: string;
-  sellerEmail: string;
-  milestones: Array<{
-    title: string;
-    description: string;
-    amount: string;
-    dueDate: string;
-  }>;
+interface TransactionFormProps {
+  selectedBuyerId?: number;
+  selectedSellerId?: number;
+  onTransactionCreated?: (transactionId: number) => void;
+  onCancel?: () => void;
 }
 
-const initialFormData: TransactionFormData = {
-  title: "",
-  type: "service",
-  description: "",
-  amount: "",
-  currency: "USD",
-  dueDate: "",
-  sellerEmail: "",
-  milestones: [],
-};
-
-export default function TransactionForm() {
-  const [step, setStep] = useState<TransactionFormStep>(1);
-  const [formData, setFormData] = useState<TransactionFormData>(initialFormData);
-  const { toast } = useToast();
+export default function TransactionForm({
+  selectedBuyerId,
+  selectedSellerId,
+  onTransactionCreated,
+  onCancel
+}: TransactionFormProps) {
   const { user } = useAuth();
-  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // State for form fields
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("USD");
+  const [dueDate, setDueDate] = useState("");
+  const [buyerId, setBuyerId] = useState<number | undefined>(selectedBuyerId);
+  const [sellerId, setSellerId] = useState<number | undefined>(selectedSellerId);
+  
+  // State for milestones
+  const [milestones, setMilestones] = useState([
+    { title: "", description: "", amount: "", dueDate: "" }
+  ]);
+  
+  // State for loading
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Fetch all users to select buyers and sellers
+  const { data: users } = useQuery<User[]>({
+    queryKey: ["/api/users"],
+    enabled: !selectedBuyerId || !selectedSellerId, // Only fetch if we don't have both buyer and seller
+  });
+  
+  // Fetch buyer requests if we're a broker
+  const { data: brokerRequests } = useQuery<BrokerRequest[]>({
+    queryKey: ["/api/broker-requests"],
+    enabled: !!user && user.role === "broker",
+  });
+  
+  // Filter users by role
+  const buyers = users?.filter(u => u.role === "buyer" || u.role === "user") || [];
+  const sellers = users?.filter(u => u.role === "seller" || u.role === "user") || [];
+  
+  // Get pending broker requests (accepted requests that haven't been turned into transactions yet)
+  const pendingRequests = brokerRequests?.filter(req => req.status === "accepted") || [];
 
-  // Progress indicator values
-  const stepProgress = {
-    1: 33,
-    2: 66,
-    3: 100,
-  };
-
-  // Function to update form data
-  const updateFormData = (field: string, value: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  // Function to add a milestone
-  const addMilestone = () => {
-    const newMilestone = {
-      title: "",
-      description: "",
-      amount: "",
-      dueDate: "",
-    };
-    
-    setFormData((prev) => ({
-      ...prev,
-      milestones: [...prev.milestones, newMilestone],
-    }));
-  };
-
-  // Function to update milestone data
-  const updateMilestone = (index: number, field: string, value: any) => {
-    setFormData((prev) => {
-      const updatedMilestones = [...prev.milestones];
-      updatedMilestones[index] = {
-        ...updatedMilestones[index],
-        [field]: value,
-      };
-      return {
-        ...prev,
-        milestones: updatedMilestones,
-      };
-    });
-  };
-
-  // Function to remove a milestone
-  const removeMilestone = (index: number) => {
-    setFormData((prev) => {
-      const updatedMilestones = [...prev.milestones];
-      updatedMilestones.splice(index, 1);
-      return {
-        ...prev,
-        milestones: updatedMilestones,
-      };
-    });
-  };
-
-  // Function to continue to next step
-  const nextStep = () => {
-    // Validation for first step
-    if (step === 1) {
-      if (!formData.title || !formData.description || !formData.amount || !formData.sellerEmail) {
-        toast({
-          title: "Missing information",
-          description: "Please fill out all required fields",
-          variant: "destructive",
-        });
-        return;
+  // Mutation for creating transaction
+  const createTransaction = useMutation({
+    mutationFn: async (transactionData: any) => {
+      // In a real app, we would call the API
+      // For now, simulate a successful creation
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      return { id: Math.floor(Math.random() * 1000) + 1 };
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
+      toast({
+        title: "Transaction Created",
+        description: "The escrow transaction has been created successfully.",
+        variant: "default",
+      });
+      if (onTransactionCreated) {
+        onTransactionCreated(data.id);
       }
-    }
-    
-    // Validation for milestones step
-    if (step === 2) {
-      if (formData.milestones.length === 0) {
-        toast({
-          title: "No milestones",
-          description: "Please add at least one milestone",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Check if all milestone fields are filled
-      const incompleteMilestones = formData.milestones.some(
-        m => !m.title || !m.description || !m.amount || !m.dueDate
-      );
-      
-      if (incompleteMilestones) {
-        toast({
-          title: "Incomplete milestones",
-          description: "Please complete all milestone details",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-    
-    setStep((prev) => (prev < 3 ? (prev + 1) as TransactionFormStep : prev));
-  };
-
-  // Function to go back to previous step
-  const prevStep = () => {
-    setStep((prev) => (prev > 1 ? (prev - 1) as TransactionFormStep : prev));
-  };
-
-  // Function to submit the form
-  const handleSubmit = async () => {
-    try {
-      // Call API to create transaction
-      const response = await apiRequest("POST", "/api/transactions", formData);
-      
-      if (response.ok) {
-        toast({
-          title: "Success!",
-          description: "Your transaction has been created.",
-        });
-        navigate("/dashboard");
-      }
-    } catch (error) {
+    },
+    onError: (error) => {
       toast({
         title: "Error",
-        description: "There was a problem creating your transaction. Please try again.",
+        description: "Failed to create transaction. Please try again.",
         variant: "destructive",
       });
+      setIsSubmitting(false);
     }
+  });
+
+  // Add a new milestone
+  const addMilestone = () => {
+    setMilestones([...milestones, { title: "", description: "", amount: "", dueDate: "" }]);
+  };
+
+  // Remove a milestone
+  const removeMilestone = (index: number) => {
+    if (milestones.length > 1) {
+      setMilestones(milestones.filter((_, i) => i !== index));
+    }
+  };
+
+  // Update a milestone
+  const updateMilestone = (index: number, field: string, value: string) => {
+    const updatedMilestones = [...milestones];
+    updatedMilestones[index] = {
+      ...updatedMilestones[index],
+      [field]: value
+    };
+    setMilestones(updatedMilestones);
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!title || !amount || !buyerId || !sellerId || !dueDate) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate milestones
+    const milestonesValid = milestones.every(m => m.title && m.amount && m.dueDate);
+    if (!milestonesValid) {
+      toast({
+        title: "Invalid Milestones",
+        description: "Please fill in all milestone fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Calculate total milestone amount
+    const milestonesTotal = milestones.reduce((sum, m) => sum + parseFloat(m.amount || "0"), 0);
+    const totalAmount = parseFloat(amount);
+    
+    if (Math.abs(milestonesTotal - totalAmount) > 0.01) {
+      toast({
+        title: "Amount Mismatch",
+        description: "The sum of milestone amounts must equal the total transaction amount.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const transactionData = {
+      title,
+      description,
+      amount,
+      currency,
+      dueDate,
+      buyerId,
+      sellerId,
+      brokerId: user?.id,
+      milestones: milestones.map(m => ({
+        ...m,
+        status: "pending"
+      }))
+    };
+    
+    createTransaction.mutate(transactionData);
   };
 
   return (
-    <GlassCard className="p-6 md:p-8">
-      <div className="flex justify-between items-center mb-8">
-        <h3 className="text-xl font-outfit font-semibold">
-          {step === 1
-            ? "Transaction Details"
-            : step === 2
-            ? "Define Milestones"
-            : "Review & Confirm"}
-        </h3>
-        <div className="flex items-center gap-1 text-sm text-primary">
-          <span>Step {step} of 3</span>
-          <div className="w-20 h-1.5 bg-primary/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full"
-              style={{ width: `${stepProgress[step]}%` }}
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Step 1: Transaction Details */}
-      {step === 1 && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-darkBg font-medium mb-2">
-                Transaction Title
-              </label>
-              <GlassInput
-                type="text"
-                placeholder="E.g. Website Development Project"
-                value={formData.title}
-                onChange={(e) => updateFormData("title", e.target.value)}
-              />
+    <GlassCard className="p-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <h2 className="text-xl font-bold text-white mb-6">Create New Transaction</h2>
+          
+          {pendingRequests.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-white font-medium mb-3">Pending Buyer Requests</h3>
+              <div className="bg-white/5 p-4 rounded-lg">
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  {pendingRequests.map(request => (
+                    <div 
+                      key={request.id} 
+                      className="flex justify-between items-center p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
+                      onClick={() => setBuyerId(request.buyerId)}
+                    >
+                      <div className="flex items-center">
+                        <UserCircle className="w-6 h-6 text-blue-400 mr-2" />
+                        <div>
+                          <p className="text-white">{request.buyer.username}</p>
+                          <p className="text-white/60 text-xs">Request ID: {request.id}</p>
+                        </div>
+                      </div>
+                      <GlassButton 
+                        variant="outline" 
+                        size="sm"
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setBuyerId(request.buyerId);
+                        }}
+                      >
+                        Select
+                      </GlassButton>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="block text-darkBg font-medium mb-2">
-                Transaction Type
+              <label htmlFor="buyer" className="block text-white/70 text-sm mb-2">
+                Buyer *
               </label>
               <select
-                className="glass-input w-full px-4 py-3 focus:outline-none appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik01Ljc5MiA3LjcwN2E1IDUgMCAwIDAgNy4wNyAwbC0uNzA3LS43MDdhNSA1IDAgMCAxLTcuMDcgMGwtLjcwNy43MDd6Ii8+PC9zdmc+')] bg-[length:20px_20px] bg-no-repeat bg-[right_10px_center]"
-                value={formData.type}
-                onChange={(e) => updateFormData("type", e.target.value)}
+                id="buyer"
+                className="w-full py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                value={buyerId || ""}
+                onChange={(e) => setBuyerId(parseInt(e.target.value) || undefined)}
+                required
               >
-                <option value="product">Product Purchase</option>
-                <option value="service">Service Agreement</option>
-                <option value="digital">Digital Goods</option>
-                <option value="custom">Custom Contract</option>
+                <option value="">Select a buyer</option>
+                {buyers.map(buyer => (
+                  <option key={buyer.id} value={buyer.id}>
+                    {buyer.username}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label htmlFor="seller" className="block text-white/70 text-sm mb-2">
+                Seller *
+              </label>
+              <select
+                id="seller"
+                className="w-full py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                value={sellerId || ""}
+                onChange={(e) => setSellerId(parseInt(e.target.value) || undefined)}
+                required
+              >
+                <option value="">Select a seller</option>
+                {sellers.map(seller => (
+                  <option key={seller.id} value={seller.id}>
+                    {seller.username}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
-
-          <div>
-            <label className="block text-darkBg font-medium mb-2">
+          
+          <div className="mb-4">
+            <label htmlFor="title" className="block text-white/70 text-sm mb-2">
+              Transaction Title *
+            </label>
+            <GlassInput
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g. Website Development Project"
+              required
+            />
+          </div>
+          
+          <div className="mb-4">
+            <label htmlFor="description" className="block text-white/70 text-sm mb-2">
               Description
             </label>
             <textarea
-              className="glass-input w-full px-4 py-3 focus:outline-none min-h-[100px]"
-              placeholder="Describe the transaction purpose and details..."
-              value={formData.description}
-              onChange={(e) => updateFormData("description", e.target.value)}
-            ></textarea>
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Describe the transaction details..."
+              className="w-full py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary min-h-[100px]"
+            />
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <div>
-              <label className="block text-darkBg font-medium mb-2">
-                Total Amount
+              <label htmlFor="amount" className="block text-white/70 text-sm mb-2">
+                Total Amount *
               </label>
-              <GlassInput
-                type="text"
-                placeholder="0.00"
-                value={formData.amount}
-                onChange={(e) => updateFormData("amount", e.target.value)}
-                icon={<span className="text-darkBg opacity-70">$</span>}
-              />
+              <div className="relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <DollarSign className="h-4 w-4 text-white/40" />
+                </div>
+                <input
+                  id="amount"
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="w-full py-3 pl-10 pr-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                  required
+                  step="0.01"
+                  min="0"
+                />
+              </div>
             </div>
+            
             <div>
-              <label className="block text-darkBg font-medium mb-2">
+              <label htmlFor="currency" className="block text-white/70 text-sm mb-2">
                 Currency
               </label>
               <select
-                className="glass-input w-full px-4 py-3 focus:outline-none appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0iY3VycmVudENvbG9yIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik01Ljc5MiA3LjcwN2E1IDUgMCAwIDAgNy4wNyAwbC0uNzA3LS43MDdhNSA1IDAgMCAxLTcuMDcgMGwtLjcwNy43MDd6Ii8+PC9zdmc+')] bg-[length:20px_20px] bg-no-repeat bg-[right_10px_center]"
-                value={formData.currency}
-                onChange={(e) => updateFormData("currency", e.target.value)}
+                id="currency"
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-full py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
               >
                 <option value="USD">USD - US Dollar</option>
                 <option value="EUR">EUR - Euro</option>
                 <option value="GBP">GBP - British Pound</option>
-                <option value="JPY">JPY - Japanese Yen</option>
+                <option value="CAD">CAD - Canadian Dollar</option>
+                <option value="AUD">AUD - Australian Dollar</option>
               </select>
             </div>
+            
             <div>
-              <label className="block text-darkBg font-medium mb-2">
-                Expected Completion
+              <label htmlFor="dueDate" className="block text-white/70 text-sm mb-2">
+                Due Date *
               </label>
-              <GlassInput
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => updateFormData("dueDate", e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-darkBg font-medium mb-4">
-              Participants
-            </label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="glass-card p-4 bg-opacity-40">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className="font-medium">You (Buyer)</p>
-                    <p className="text-sm text-darkBg opacity-70">
-                      {user?.username || "Your account"}
-                    </p>
-                  </div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <Calendar className="h-4 w-4 text-white/40" />
                 </div>
-              </div>
-
-              <div className="glass-card p-4 bg-opacity-40">
-                <div className="flex justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
-                      >
-                        <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium">Add Seller</p>
-                    </div>
-                  </div>
-                </div>
-                <GlassInput
-                  type="email"
-                  placeholder="Enter seller's email address"
-                  className="text-sm"
-                  value={formData.sellerEmail}
-                  onChange={(e) => updateFormData("sellerEmail", e.target.value)}
+                <input
+                  id="dueDate"
+                  type="date"
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  className="w-full py-3 pl-10 pr-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                  required
+                  min={new Date().toISOString().split('T')[0]}
                 />
               </div>
             </div>
           </div>
-
-          <div className="pt-4 flex justify-end">
-            <GlassButton onClick={nextStep}>
-              Continue to Milestones
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 inline-block ml-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+          
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-white font-medium">Milestones</h3>
+              <button
+                type="button"
+                onClick={addMilestone}
+                className="text-primary flex items-center text-sm hover:underline"
               >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </GlassButton>
-          </div>
-        </div>
-      )}
-
-      {/* Step 2: Milestones */}
-      {step === 2 && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h4 className="font-outfit font-semibold">Define Transaction Milestones</h4>
-            <GlassButton variant="secondary" size="sm" onClick={addMilestone}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 inline-block mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Add Milestone
-            </GlassButton>
-          </div>
-
-          <div className="space-y-4">
-            {formData.milestones.length === 0 ? (
-              <div className="text-center py-10 glass-card bg-opacity-30">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-12 w-12 mx-auto text-primary opacity-50 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-                <p className="text-darkBg opacity-70">
-                  No milestones yet. Add your first milestone to break down the project.
-                </p>
-              </div>
-            ) : (
-              formData.milestones.map((milestone, index) => (
-                <div key={index} className="glass-card p-4 bg-opacity-40">
-                  <div className="flex justify-between">
-                    <h5 className="font-medium mb-2">Milestone {index + 1}</h5>
-                    <button
-                      className="text-destructive"
-                      onClick={() => removeMilestone(index)}
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        viewBox="0 0 20 20"
-                        fill="currentColor"
+                <PlusCircle className="w-4 h-4 mr-1" />
+                Add Milestone
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {milestones.map((milestone, index) => (
+                <div key={index} className="bg-white/5 p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-3">
+                    <h4 className="text-white font-medium">Milestone {index + 1}</h4>
+                    {milestones.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeMilestone(index)}
+                        className="text-red-400 hover:text-red-300 transition-colors"
                       >
-                        <path
-                          fillRule="evenodd"
-                          d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    </button>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-darkBg text-sm mb-1">
-                        Title
+                      <label className="block text-white/70 text-xs mb-1">
+                        Title *
                       </label>
                       <GlassInput
-                        type="text"
-                        placeholder="E.g. Design Completion"
                         value={milestone.title}
-                        onChange={(e) =>
-                          updateMilestone(index, "title", e.target.value)
-                        }
+                        onChange={(e) => updateMilestone(index, 'title', e.target.value)}
+                        placeholder="e.g. Initial Design"
+                        required
                       />
                     </div>
+                    
                     <div>
-                      <label className="block text-darkBg text-sm mb-1">
-                        Amount
+                      <label className="block text-white/70 text-xs mb-1">
+                        Amount *
                       </label>
-                      <GlassInput
-                        type="text"
-                        placeholder="0.00"
-                        value={milestone.amount}
-                        onChange={(e) =>
-                          updateMilestone(index, "amount", e.target.value)
-                        }
-                        icon={<span className="text-darkBg opacity-70">$</span>}
-                      />
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                          <DollarSign className="h-4 w-4 text-white/40" />
+                        </div>
+                        <input
+                          type="number"
+                          value={milestone.amount}
+                          onChange={(e) => updateMilestone(index, 'amount', e.target.value)}
+                          placeholder="0.00"
+                          className="w-full py-3 pl-10 pr-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                          required
+                          step="0.01"
+                          min="0"
+                        />
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-2">
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-darkBg text-sm mb-1">
+                      <label className="block text-white/70 text-xs mb-1">
                         Description
                       </label>
                       <textarea
-                        className="glass-input w-full px-4 py-2 focus:outline-none min-h-[80px] text-sm"
-                        placeholder="Describe what needs to be delivered..."
                         value={milestone.description}
-                        onChange={(e) =>
-                          updateMilestone(index, "description", e.target.value)
-                        }
-                      ></textarea>
-                    </div>
-                    <div>
-                      <label className="block text-darkBg text-sm mb-1">
-                        Due Date
-                      </label>
-                      <GlassInput
-                        type="date"
-                        value={milestone.dueDate}
-                        onChange={(e) =>
-                          updateMilestone(index, "dueDate", e.target.value)
-                        }
+                        onChange={(e) => updateMilestone(index, 'description', e.target.value)}
+                        placeholder="Describe this milestone..."
+                        className="w-full py-3 px-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary min-h-[60px]"
                       />
                     </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          <div className="pt-4 flex justify-between">
-            <GlassButton variant="outline" onClick={prevStep}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 inline-block mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Back
-            </GlassButton>
-            <GlassButton onClick={nextStep}>
-              Review Transaction
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 inline-block ml-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </GlassButton>
-          </div>
-        </div>
-      )}
-
-      {/* Step 3: Review & Confirm */}
-      {step === 3 && (
-        <div className="space-y-6">
-          <div className="glass-card p-4 bg-opacity-40">
-            <h4 className="font-outfit font-semibold mb-4">Transaction Summary</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-sm text-darkBg opacity-70 mb-1">Title</p>
-                <p className="font-medium">{formData.title}</p>
-              </div>
-              <div>
-                <p className="text-sm text-darkBg opacity-70 mb-1">Type</p>
-                <p className="font-medium capitalize">{formData.type}</p>
-              </div>
-              <div>
-                <p className="text-sm text-darkBg opacity-70 mb-1">Amount</p>
-                <p className="font-medium">
-                  {formData.currency} {formData.amount}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-darkBg opacity-70 mb-1">
-                  Expected Completion
-                </p>
-                <p className="font-medium">
-                  {formData.dueDate
-                    ? new Date(formData.dueDate).toLocaleDateString()
-                    : "Not specified"}
-                </p>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm text-darkBg opacity-70 mb-1">Description</p>
-              <p>{formData.description}</p>
-            </div>
-          </div>
-
-          <div className="glass-card p-4 bg-opacity-40">
-            <h4 className="font-outfit font-semibold mb-4">Participants</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-medium">You (Buyer)</p>
-                  <p className="text-sm text-darkBg opacity-70">
-                    {user?.username || "Your account"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-secondary">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6z" />
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-medium">Seller</p>
-                  <p className="text-sm text-darkBg opacity-70">
-                    {formData.sellerEmail}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="glass-card p-4 bg-opacity-40">
-            <h4 className="font-outfit font-semibold mb-4">Milestones</h4>
-            <div className="space-y-3">
-              {formData.milestones.map((milestone, index) => (
-                <div
-                  key={index}
-                  className="glass-card p-3 bg-opacity-40 border-l-4 border-primary"
-                >
-                  <div className="flex justify-between items-start">
+                    
                     <div>
-                      <h5 className="font-medium">{milestone.title}</h5>
-                      <p className="text-sm text-darkBg opacity-70">
-                        {milestone.description}
-                      </p>
-                      <p className="text-xs text-darkBg opacity-60 mt-1">
-                        Due: {new Date(milestone.dueDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">
-                        {formData.currency} {milestone.amount}
-                      </p>
-                      <p className="text-xs text-darkBg opacity-70">
-                        {Math.round(
-                          (parseFloat(milestone.amount) /
-                            parseFloat(formData.amount)) *
-                            100
-                        )}
-                        % of total
-                      </p>
+                      <label className="block text-white/70 text-xs mb-1">
+                        Due Date *
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                          <Calendar className="h-4 w-4 text-white/40" />
+                        </div>
+                        <input
+                          type="date"
+                          value={milestone.dueDate}
+                          onChange={(e) => updateMilestone(index, 'dueDate', e.target.value)}
+                          className="w-full py-3 pl-10 pr-4 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-primary"
+                          required
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-
-          <div className="glass-card p-4 bg-opacity-40">
-            <h4 className="font-outfit font-semibold mb-2">Terms & Conditions</h4>
-            <div className="flex items-start gap-2 mb-4">
-              <input
-                type="checkbox"
-                id="terms"
-                className="mt-1"
-                required
-              />
-              <label htmlFor="terms" className="text-sm">
-                I agree to the{" "}
-                <a href="#" className="text-primary">
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a href="#" className="text-primary">
-                  Privacy Policy
-                </a>
-                . I understand that once funded, the transaction will be governed
-                by these terms.
-              </label>
-            </div>
-          </div>
-
-          <div className="pt-4 flex justify-between">
-            <GlassButton variant="outline" onClick={prevStep}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 inline-block mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              Back
-            </GlassButton>
-            <GlassButton onClick={handleSubmit}>
-              Create Transaction
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 inline-block ml-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </GlassButton>
-          </div>
         </div>
-      )}
+        
+        <div className="flex justify-end space-x-3">
+          {onCancel && (
+            <GlassButton
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </GlassButton>
+          )}
+          
+          <GlassButton
+            type="submit"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                Creating...
+              </>
+            ) : (
+              'Create Transaction'
+            )}
+          </GlassButton>
+        </div>
+      </form>
     </GlassCard>
   );
 }

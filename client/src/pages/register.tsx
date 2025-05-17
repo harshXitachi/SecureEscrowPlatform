@@ -13,6 +13,7 @@ export default function Register() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("buyer"); // Default role is buyer
   const [isLoading, setIsLoading] = useState(false);
   const [formError, setFormError] = useState(""); // General form error
   const [errors, setErrors] = useState({
@@ -72,12 +73,12 @@ export default function Register() {
     setIsLoading(true);
     
     try {
-      console.log("Attempting to register user:", username);
+      console.log("Attempting to register user:", username, "with role:", role);
       
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, role }), // Include role in registration
         credentials: "include"
       });
       
@@ -113,9 +114,21 @@ export default function Register() {
           console.log("Auto-login response status:", loginResponse.status);
           
           if (loginResponse.ok) {
-            console.log("Auto-login successful, redirecting to home");
-            // Redirect to home page after successful login
-            navigate("/");
+            console.log("Auto-login successful, redirecting to role-specific dashboard");
+            // Redirect based on user role
+            switch(role) {
+              case 'buyer':
+                navigate("/dashboard/buyer");
+                break;
+              case 'seller':
+                navigate("/dashboard/seller");
+                break;
+              case 'broker':
+                navigate("/dashboard/broker");
+                break;
+              default:
+                navigate("/dashboard");
+            }
           } else {
             console.log("Auto-login failed, redirecting to login page");
             navigate("/login"); // Redirect to login if auto-login fails
@@ -307,6 +320,47 @@ export default function Register() {
                 {errors.confirmPassword && (
                   <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
                 )}
+              </div>
+
+              <div>
+                <label htmlFor="role" className="block text-darkBg font-medium mb-2">
+                  Select Your Role
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRole("buyer")}
+                    className={`p-3 border rounded-md transition-colors ${
+                      role === "buyer" 
+                        ? "bg-primary text-white border-primary" 
+                        : "bg-white/10 border-white/20 text-darkBg hover:bg-white/20"
+                    }`}
+                  >
+                    Buyer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("seller")}
+                    className={`p-3 border rounded-md transition-colors ${
+                      role === "seller" 
+                        ? "bg-primary text-white border-primary" 
+                        : "bg-white/10 border-white/20 text-darkBg hover:bg-white/20"
+                    }`}
+                  >
+                    Seller
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("broker")}
+                    className={`p-3 border rounded-md transition-colors ${
+                      role === "broker" 
+                        ? "bg-primary text-white border-primary" 
+                        : "bg-white/10 border-white/20 text-darkBg hover:bg-white/20"
+                    }`}
+                  >
+                    Broker
+                  </button>
+                </div>
               </div>
 
               <div>

@@ -12,6 +12,7 @@ export default function Login() {
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("buyer"); // Default role is buyer
   const [isLoading, setIsLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
 
@@ -38,18 +39,39 @@ export default function Login() {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username, password, role }), // Include role preference
         credentials: "include"
       });
       
       // Handle successful response
       if (response.ok) {
+        const userData = await response.json();
+        
         toast({
           title: "Success",
           description: "You've been logged in successfully",
         });
-        // Force navigation to dashboard on success
-        window.location.href = "/dashboard";
+
+        // Redirect based on selected role (or user's actual role if it exists)
+        const userRole = userData?.role || role;
+        
+        switch(userRole) {
+          case 'buyer':
+            window.location.href = "/dashboard/buyer";
+            break;
+          case 'seller':
+            window.location.href = "/dashboard/seller";
+            break;
+          case 'broker':
+            window.location.href = "/dashboard/broker";
+            break;
+          case 'admin':
+            window.location.href = "/admin/dashboard";
+            break;
+          default:
+            // For users without a specific role, redirect to the main dashboard
+            window.location.href = "/dashboard";
+        }
         return;
       }
       
@@ -62,7 +84,7 @@ export default function Login() {
           
           // Special handling for test accounts
           if (errorMessage.includes("dev mode") || errorMessage.includes("test accounts")) {
-            errorMessage = "For test accounts, use 'password123' as the password.";
+            errorMessage = "Invalid username or password.";
           }
         }
       } catch (parseError) {
@@ -70,14 +92,9 @@ export default function Login() {
         
         // Handle specific HTTP status codes
         if (response.status === 500) {
-          errorMessage = "Internal server error. Please try one of the test accounts listed below.";
+          errorMessage = "Internal server error. Please try again later.";
         } else if (response.status === 401) {
-          // Highlight test accounts if user is trying to log in with one
-          if (["test", "admin", "mockuser"].includes(username)) {
-            errorMessage = "For test accounts, please use 'password123' as the password.";
-          } else {
-            errorMessage = "Invalid username or password.";
-          }
+          errorMessage = "Invalid username or password.";
         } else if (response.status === 404) {
           errorMessage = "Login service unavailable. Server may be down.";
         }
@@ -132,10 +149,6 @@ export default function Login() {
                   {loginError}
                 </div>
               )}
-              <div className="mt-2 text-sm text-indigo-600">
-                <p>Available test accounts:</p>
-                <p>Username: test, Password: password123</p>
-              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6" autoComplete="on" id="login-form" name="login-form">
@@ -206,6 +219,47 @@ export default function Login() {
               </div>
 
               <div>
+                <label htmlFor="role" className="block text-darkBg font-medium mb-2">
+                  Login As
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRole("buyer")}
+                    className={`p-3 border rounded-md transition-colors ${
+                      role === "buyer" 
+                        ? "bg-primary text-white border-primary" 
+                        : "bg-white/10 border-white/20 text-darkBg hover:bg-white/20"
+                    }`}
+                  >
+                    Buyer
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("seller")}
+                    className={`p-3 border rounded-md transition-colors ${
+                      role === "seller" 
+                        ? "bg-primary text-white border-primary" 
+                        : "bg-white/10 border-white/20 text-darkBg hover:bg-white/20"
+                    }`}
+                  >
+                    Seller
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole("broker")}
+                    className={`p-3 border rounded-md transition-colors ${
+                      role === "broker" 
+                        ? "bg-primary text-white border-primary" 
+                        : "bg-white/10 border-white/20 text-darkBg hover:bg-white/20"
+                    }`}
+                  >
+                    Broker
+                  </button>
+                </div>
+              </div>
+
+              <div>
                 <GlassButton 
                   type="submit" 
                   fullWidth 
@@ -218,6 +272,14 @@ export default function Login() {
                 </GlassButton>
               </div>
             </form>
+
+            <div className="mt-6">
+              <Link href="/register">
+                <GlassButton variant="outline" fullWidth>
+                  Register
+                </GlassButton>
+              </Link>
+            </div>
 
             <div className="mt-6 text-center">
               <p className="text-darkBg opacity-80">
